@@ -1,2 +1,0 @@
-# InkHub
-Projeto Integrador SenacTech
