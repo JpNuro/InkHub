@@ -1,0 +1,208 @@
+"""
+Regras de negócio e acesso ao banco (sessão + consultas).
+Nas rotas só chamamos estas funções e devolvemos JSON — fica mais fácil de explicar.
+"""
+
+from sqlalchemy import select
+
+from database import SessionLocal
+from models import Usuario, Obra, Capitulo
+
+def listar_obras():
+    session = SessionLocal()
+    try:
+        linhas = session.scalars(select(Obra).order_by(Obra.titulo_obra)).all()
+        return [o.to_dict() for o in linhas]
+    finally:
+        session.close()
+
+def listar_capitulos():
+    session = SessionLocal()
+    try:
+        linhas = session.scalars(select(Capitulo).order_by(Capitulo.numero_capitulo)).all()
+        return [c.to_dict() for c in linhas]
+    finally:
+        session.close()
+
+def listar_usuarios():
+    session = SessionLocal()
+    try:
+        linhas = session.scalars(select(Usuario).order_by(Usuario.nome)).all()
+        return [u.to_dict() for u in linhas]
+    finally:
+        session.close()
+
+# def listar_professores():
+#     session = SessionLocal()
+#     try:
+#         linhas = session.scalars(select(Professor).order_by(Professor.nome)).all()
+#         return [p.to_dict() for p in linhas]
+#     finally:
+#         session.close()
+
+# def listar_turmas():
+#     session = SessionLocal()
+#     try:
+#         linhas = session.scalars(select(Turma).order_by(Turma.codigo)).all()
+#         return [t.to_dict() for t in linhas]
+#     finally:
+#         session.close()
+
+# def listar_alunos():
+#     session = SessionLocal()
+#     try:
+#         linhas = session.scalars(select(Aluno).order_by(Aluno.nome)).all()
+#         return [a.to_dict() for a in linhas]
+#     finally:
+#         session.close()
+
+
+def _texto_obrigatorio(valor, campo):
+    if valor is None or str(valor).strip() == "":
+        raise ValueError(f"O campo '{campo}' é obrigatório.")
+    return str(valor).strip()
+
+def _texto_opcional(valor):
+    if valor is None:
+        return None
+    texto = str(valor).strip()
+    return texto or None
+
+
+def cadastrar_usuario(dados):
+    nome = _texto_obrigatorio(dados.get("nome"), "nome")
+    email = _texto_opcional(dados.get("email"))
+
+    session = SessionLocal()
+    try:
+        usuario = Usuario(nome=nome, email=email)
+        session.add(usuario)
+        session.commit()
+        session.refresh(usuario)
+        return usuario.to_dict()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+def cadastrar_obra(dados):
+    titulo_obra = _texto_obrigatorio(dados.get("titulo_obra"), "titulo_obra")
+    autor_id = _texto_obrigatorio(dados.get("autor_id"), "autor_id")
+    categoria = _texto_opcional(dados.get("categoria")) or None
+    ano = _texto_opcional(dados.get("ano")) or None
+    editora = _texto_opcional(dados.get("editora")) or None
+
+    session = SessionLocal()
+    try:
+        autor = session.get(Usuario, int(autor_id))
+        if autor is None:
+            raise ValueError(f"Autor {autor_id} não encontrado.")
+
+        obra = Obra(
+            titulo_obra=titulo_obra,
+            autor_id=autor.id,
+            categoria=categoria,
+            ano=int(ano) if ano else None,
+            editora=editora,
+        )
+        session.add(obra)
+        session.commit()
+        session.refresh(obra)
+        return obra.to_dict()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+def cadastrar_capitulo(dados):
+    titulo_capitulo = _texto_obrigatorio(dados.get("titulo_capitulo"), "titulo_capitulo")
+    numero_capitulo = _texto_obrigatorio(dados.get("numero_capitulo"), "numero_capitulo")
+    obra_id = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
+
+    session = SessionLocal()
+    try:
+        obra = session.get(Obra, int(obra_id))
+        if obra is None:
+            raise ValueError(f"Obra {obra_id} não encontrada.")
+
+        capitulo = Capitulo(
+            titulo_capitulo=titulo_capitulo,
+            numero_capitulo=numero_capitulo,
+            obra_id=obra.id
+        )
+        session.add(capitulo)
+        session.commit()
+        session.refresh(capitulo)
+        return capitulo.to_dict()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+# def cadastrar_professor(dados):
+#     nome = _texto_obrigatorio(dados.get("nome"), "nome")
+#     email = _texto_opcional(dados.get("email"))
+
+#     session = SessionLocal()
+#     try:
+#         professor = Professor(nome=nome, email=email)
+#         session.add(professor)
+#         session.commit()
+#         session.refresh(professor)
+#         return professor.to_dict()
+#     except Exception:
+#         session.rollback()
+#         raise
+#     finally:
+#         session.close()
+
+# def cadastrar_turma(dados):
+#     nome = _texto_obrigatorio(dados.get("nome"), "nome")
+#     codigo = _texto_obrigatorio(dados.get("codigo"), "codigo")
+#     professor_id = dados.get("professor_id")
+#     if not professor_id:
+#         raise ValueError("O campo 'professor_id' é obrigatório.")
+
+#     session = SessionLocal()
+#     try:
+#         professor = session.get(Professor, int(professor_id))
+#         if professor is None:
+#             raise ValueError(f"Professor {professor_id} não encontrado.")
+
+#         turma = Turma(nome=nome, codigo=codigo, professor_id=professor.id)
+#         session.add(turma)
+#         session.commit()
+#         session.refresh(turma)
+#         return turma.to_dict()
+#     except Exception:
+#         session.rollback()
+#         raise
+#     finally:
+#         session.close()
+
+# def cadastrar_aluno(dados):
+#     nome = _texto_obrigatorio(dados.get("nome"), "nome")
+#     email = _texto_opcional(dados.get("email"))
+#     turma_id = dados.get("turma_id")
+#     if not turma_id:
+#         raise ValueError("O campo 'turma_id' é obrigatório.")
+
+#     session = SessionLocal()
+#     try:
+#         turma = session.get(Turma, int(turma_id))
+#         if turma is None:
+#             raise ValueError(f"Turma {turma_id} não encontrada.")
+
+#         aluno = Aluno(nome=nome, email=email, turma_id=turma.id)
+#         session.add(aluno)
+#         session.commit()
+#         session.refresh(aluno)
+#         return aluno.to_dict()
+#     except Exception:
+#         session.rollback()
+#         raise
+#     finally:
+#         session.close()
