@@ -17,6 +17,7 @@ class Obra(Base):
     
     capitulos = relationship("Capitulo", back_populates="obra")
     autor = relationship("Usuario", back_populates="obras")
+    pdf_urls = relationship("PdfUrl", back_populates="obra")
 
     def to_dict(self):
         autor_nome = self.autor.nome if self.autor else None
@@ -61,6 +62,21 @@ class Usuario(Base):
     def __repr__(self):
         return f"<Usuario {self.id} {self.nome!r}>"
 
+
+class PdfUrl(Base):
+    __tablename__ = "pdf_urls"
+
+    id = Column(Integer, primary_key=True)
+    url = Column(String(200), nullable=False)
+    obra_id = Column(Integer, ForeignKey("obras.id"), nullable=False)
+
+    obra = relationship("Obra", back_populates="pdf_urls")
+
+    def to_dict(self):
+        return {"id": self.id, "url": self.url, "obra_id": self.obra_id}
+
+    def __repr__(self):
+        return f"<pdf_url {self.id} {self.url!r}>"
 
 # class Professor(Base):
 #     __tablename__ = "professores"

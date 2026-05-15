@@ -32,6 +32,16 @@ def listar_usuarios():
     finally:
         session.close()
 
+
+def listar_pdf_urls():
+    session = SessionLocal()
+    try:
+        linhas = session.scalars(select(pdf_url).order_by(pdf_url.url)).all()
+        return [p.to_dict() for p in linhas]
+    finally:
+        session.close()
+
+
 # def listar_professores():
 #     session = SessionLocal()
 #     try:

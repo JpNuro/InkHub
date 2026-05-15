@@ -107,8 +107,8 @@ def populate_database():
 
     print("Tabelas criadas com sucesso!")
     usuarios = [
-        models.Usuario(nome="Fujimoto", email="Fuji@gmail.com"),
-        models.Usuario(nome="Masashi Kishimoto", email="Masamoto@gmail.com"),
+        models.Usuario(nome="Fujimoto", email="Fuji@gmail.com", senha="123"),
+        models.Usuario(nome="Masashi Kishimoto", email="Masamoto@gmail.com", senha="123"),
     ]
     session.add_all(usuarios)
     session.flush()
@@ -137,12 +137,23 @@ def populate_database():
     session.commit()
     print("Capítulos criados com sucesso!")
 
+    pdf_urls = [
+        models.PdfUrl(url="https://testejw267.com", obra_id=1),
+        
+    ]
+    session.add_all(pdf_urls)
+    session.flush()
+    session.commit()
+    print("PDF URLs criadas com sucesso!")
+
     usu = len(session.scalars(select(models.Usuario)).all())
     print(f"Total de usuarios: {usu}")
     oba = len(session.scalars(select(models.Obra)).all())
     print(f"Total de obras: {oba}")
     cap = len(session.scalars(select(models.Capitulo)).all())
     print(f"Total de capítulos: {cap}")
+    pdf = len(session.scalars(select(models.PdfUrl)).all())
+    print(f"Total de PDF URLs: {pdf}")
 
 if __name__ == "__main__":
     populate_database()
