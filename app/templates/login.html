@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InkHub — Entrar</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f0f13;
+      color: #e2e2e2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* marca d'água de fundo */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 30%, rgba(124,58,237,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(124,58,237,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 380px;
+      background: #16161f;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      position: relative;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .logo h1 { font-size: 2rem; color: #fff; letter-spacing: -.02em; }
+    .logo h1 span { color: #7c3aed; }
+    .logo p { font-size: .85rem; color: #6b7280; margin-top: .3rem; }
+
+    .campo {
+      margin-bottom: 1.1rem;
+    }
+    .campo label {
+      display: block;
+      font-size: .82rem;
+      color: #9ca3af;
+      margin-bottom: .35rem;
+      font-weight: 500;
+    }
+    .campo input {
+      width: 100%;
+      background: #0f0f13;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      color: #e2e2e2;
+      padding: .65rem .85rem;
+      font-size: .95rem;
+      transition: border-color .15s;
+    }
+    .campo input:focus {
+      outline: none;
+      border-color: #7c3aed;
+    }
+    .campo input:invalid:not(:placeholder-shown) {
+      border-color: #ef4444;
+    }
+
+    .senha-wrapper {
+      position: relative;
+    }
+    .senha-wrapper input {
+      padding-right: 2.5rem;
+    }
+    .toggle-senha {
+      position: absolute;
+      right: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .toggle-senha:hover { color: #9ca3af; }
+
+    .btn-entrar {
+      width: 100%;
+      background: #7c3aed;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: .75rem;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: background .15s, transform .1s;
+    }
+    .btn-entrar:hover { background: #6d28d9; }
+    .btn-entrar:active { transform: scale(.98); }
+
+    .erro {
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: 8px;
+      color: #f87171;
+      font-size: .85rem;
+      padding: .65rem .9rem;
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .voltar {
+      display: block;
+      text-align: center;
+      margin-top: 1.4rem;
+      color: #6b7280;
+      font-size: .85rem;
+      text-decoration: none;
+    }
+    .voltar:hover { color: #a78bfa; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <h1>Ink<span>Hub</span></h1>
+    <p>Área administrativa</p>
+  </div>
+
+  {% if erro %}
+  <div class="erro">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {{ erro }}
+  </div>
+  {% endif %}
+
+  <form method="POST" action="/login">
+    <div class="campo">
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" placeholder="seu@email.com"
+             value="{{ email_salvo or '' }}" autocomplete="username" required />
+    </div>
+    <div class="campo">
+      <label for="senha">Senha</label>
+      <div class="senha-wrapper">
+        <input id="senha" name="senha" type="password" placeholder="••••••••"
+               autocomplete="current-password" required />
+        <button type="button" class="toggle-senha" onclick="toggleSenha()" aria-label="Mostrar senha">
+          <svg id="olho-aberto" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg id="olho-fechado" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <button class="btn-entrar" type="submit">Entrar</button>
+  </form>
+
+  <a class="voltar" href="/">← Voltar para o catálogo</a>
+</div>
+
+<script>
+function toggleSenha() {
+  const senhaInput = document.getElementById('senha');
+  const olhoAberto = document.getElementById('olho-aberto');
+  const olhoFechado = document.getElementById('olho-fechado');
+  
+  if (senhaInput.type === 'password') {
+    senhaInput.type = 'text';
+    olhoAberto.style.display = 'block';
+    olhoFechado.style.display = 'none';
+  } else {
+    senhaInput.type = 'password';
+    olhoAberto.style.display = 'none';
+    olhoFechado.style.display = 'block';
+  }
+}
+</script>
+
+</body>
+</html>

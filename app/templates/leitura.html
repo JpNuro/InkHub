@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InkHub</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f0f13;
+      color: #e2e2e2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Topo ── */
+    .topo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: .9rem 2rem;
+      background: #1a1a24;
+      border-bottom: 2px solid #7c3aed;
+      flex-shrink: 0;
+    }
+    .topo h1 { font-size: 1.4rem; color: #fff; flex: 1; }
+    .topo .logo-dot { color: #7c3aed; }
+
+    .btn-login {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .5rem 1.1rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .btn-login:hover { background: #6d28d9; }
+    .btn-login svg { width: 16px; height: 16px; }
+
+    /* ── Layout principal ── */
+    .container {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar — lista de obras ── */
+    .sidebar {
+      background: #16161f;
+      border-right: 1px solid #2a2a3a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 1rem;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    .sidebar-header h2 { font-size: .95rem; color: #c4b5fd; margin-bottom: .5rem; }
+
+    #busca {
+      width: 100%;
+      background: #0f0f13;
+      border: 1px solid #2a2a3a;
+      border-radius: 6px;
+      color: #e2e2e2;
+      padding: .4rem .7rem;
+      font-size: .85rem;
+    }
+    #busca:focus { outline: none; border-color: #7c3aed; }
+
+    #lista-obras { flex: 1; overflow-y: auto; padding: .5rem; }
+    #status-obras { padding: .5rem 1rem; font-size: .82rem; color: #6b7280; }
+
+    .obra-card {
+      background: #1a1a24;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      margin-bottom: .45rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .obra-card:hover  { border-color: #7c3aed; background: #1e1030; }
+    .obra-card.ativa  { border-color: #7c3aed; background: #1e1030; }
+    .obra-card .titulo { font-weight: 600; font-size: .9rem; color: #e2e2e2; }
+    .obra-card .autor  { font-size: .78rem; color: #9ca3af; margin-top: .15rem; }
+    .obra-card .badge  {
+      display: inline-block;
+      margin-top: .4rem;
+      background: #2a1a4a;
+      color: #a78bfa;
+      font-size: .7rem;
+      padding: .15rem .5rem;
+      border-radius: 99px;
+    }
+
+    /* ── Painel direito ── */
+    .painel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* estado vazio */
+    .placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #4b5563;
+      gap: .75rem;
+      text-align: center;
+      padding: 2rem;
+    }
+    .placeholder svg { width: 64px; height: 64px; opacity: .35; }
+    .placeholder p   { font-size: 1rem; }
+    .placeholder small { font-size: .82rem; color: #374151; }
+
+    /* viewer de capítulos + PDF */
+    .obra-detalhe {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .obra-detalhe-header {
+      padding: .9rem 1.4rem;
+      background: #16161f;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    .obra-detalhe-header h2 { font-size: 1.1rem; color: #e2e2e2; }
+    .obra-detalhe-header p  { font-size: .82rem; color: #9ca3af; margin-top: .2rem; }
+
+    .abas-obra {
+      display: flex;
+      gap: 0;
+      background: #16161f;
+      border-bottom: 1px solid #2a2a3a;
+      padding: 0 1rem;
+    }
+    .aba-obra {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #9ca3af;
+      padding: .6rem 1rem;
+      font-size: .88rem;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .aba-obra.ativa { color: #a78bfa; border-bottom-color: #7c3aed; }
+
+    /* lista de capítulos */
+    .cap-lista {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.4rem;
+    }
+    .cap-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .65rem .9rem;
+      border-radius: 8px;
+      border: 1px solid #2a2a3a;
+      margin-bottom: .4rem;
+      background: #16161f;
+      transition: border-color .15s;
+    }
+    .cap-item:hover { border-color: #4c1d95; }
+    .cap-num {
+      background: #2a1a4a;
+      color: #a78bfa;
+      border-radius: 6px;
+      padding: .2rem .55rem;
+      font-size: .8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .cap-titulo { font-size: .9rem; color: #d1d5db; }
+
+    /* iframe PDF */
+    .pdf-frame {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+    .pdf-barra {
+      padding: .5rem 1.2rem;
+      background: #16161f;
+      border-bottom: 1px solid #2a2a3a;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .pdf-barra span { font-size: .85rem; color: #9ca3af; flex: 1; }
+    .pdf-barra a    { color: #a78bfa; font-size: .82rem; text-decoration: none; }
+    .pdf-barra a:hover { text-decoration: underline; }
+
+    /* lista de pdfs disponíveis */
+    .pdf-cards { padding: .75rem 1.4rem; overflow-y: auto; }
+    .pdf-link-card {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .65rem .9rem;
+      border-radius: 8px;
+      border: 1px solid #2a2a3a;
+      margin-bottom: .4rem;
+      background: #16161f;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .pdf-link-card:hover { border-color: #7c3aed; background: #1e1030; }
+    .pdf-link-card svg { width: 18px; height: 18px; color: #7c3aed; flex-shrink: 0; }
+    .pdf-link-card span { font-size: .85rem; color: #d1d5db; word-break: break-all; }
+
+    .sem-pdf { padding: 1.5rem; font-size: .85rem; color: #6b7280; }
+
+    /* scrollbar sutil */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Topo ── -->
+<header class="topo">
+  <h1>Ink<span class="logo-dot">Hub</span></h1>
+  <a href="/login" class="btn-login">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+      <polyline points="10 17 15 12 10 7"/>
+      <line x1="15" y1="12" x2="3" y2="12"/>
+    </svg>
+    Entrar
+  </a>
+</header>
+
+<!-- ── Layout ── -->
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Obras disponíveis</h2>
+      <input id="busca" type="search" placeholder="Buscar obra…" autocomplete="off" />
+    </div>
+    <div id="status-obras">Carregando…</div>
+    <div id="lista-obras"></div>
+  </aside>
+
+  <!-- Painel direito -->
+  <main class="painel" id="painel">
+
+    <!-- Placeholder inicial -->
+    <div class="placeholder" id="placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+      <p>Selecione uma obra para começar a ler</p>
+      <small>Escolha na lista ao lado</small>
+    </div>
+
+    <!-- Detalhe da obra (oculto até selecionar) -->
+    <div class="obra-detalhe" id="obra-detalhe" style="display:none">
+      <div class="obra-detalhe-header">
+        <h2 id="detalhe-titulo"></h2>
+        <p id="detalhe-meta"></p>
+      </div>
+      <div class="abas-obra">
+        <button class="aba-obra ativa" data-aba="capitulos">Capítulos</button>
+        <button class="aba-obra" data-aba="pdfs">PDFs</button>
+      </div>
+
+      <!-- Capítulos -->
+      <div class="cap-lista" id="aba-capitulos">
+        <div id="lista-caps"></div>
+      </div>
+
+      <!-- PDFs -->
+      <div style="display:none; flex-direction:column; flex:1; overflow:hidden" id="aba-pdfs">
+        <div class="pdf-cards" id="lista-pdfs-obra"></div>
+        <div class="pdf-barra" id="pdf-barra" style="display:none">
+          <span id="pdf-nome">—</span>
+          <a id="pdf-link-externo" href="#" target="_blank">Abrir em nova aba ↗</a>
+        </div>
+        <iframe class="pdf-frame" id="pdf-frame" style="display:none"></iframe>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ── util ── */
+const $  = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+/* ── estado ── */
+let obraAtual = null;
+let todosObraCards = [];
+
+/* ── carregar obras ── */
+async function carregarObras() {
+  try {
+    const obras = await fetch("/api/obras").then(r => r.json());
+    const lista = $("lista-obras");
+    $("status-obras").textContent = obras.length ? "" : "Nenhuma obra cadastrada.";
+    todosObraCards = [];
+
+    obras.forEach(o => {
+      const card = document.createElement("div");
+      card.className = "obra-card";
+      card.dataset.id    = o.id;
+      card.dataset.titulo = o.titulo.toLowerCase();
+      card.innerHTML = `
+        <div class="titulo">${o.titulo}</div>
+        <div class="autor">${o.autor || "—"}</div>
+        ${o.categoria ? `<span class="badge">${o.categoria}</span>` : ""}
+      `;
+      card.addEventListener("click", () => selecionarObra(card, o));
+      lista.appendChild(card);
+      todosObraCards.push(card);
+    });
+  } catch (e) {
+    $("status-obras").textContent = "Erro ao carregar obras.";
+  }
+}
+
+/* ── busca ── */
+$("busca").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  todosObraCards.forEach(c => {
+    c.style.display = c.dataset.titulo.includes(q) ? "" : "none";
+  });
+});
+
+/* ── selecionar obra ── */
+async function selecionarObra(card, obra) {
+  $$(".obra-card").forEach(c => c.classList.remove("ativa"));
+  card.classList.add("ativa");
+  obraAtual = obra;
+
+  $("placeholder").style.display = "none";
+  $("obra-detalhe").style.display = "flex";
+
+  $("detalhe-titulo").textContent = obra.titulo;
+  $("detalhe-meta").textContent   = [obra.autor, obra.categoria, obra.ano]
+    .filter(Boolean).join(" · ");
+
+  // reset abas
+  ativarAba("capitulos");
+  await carregarCaps(obra.id);
+  await carregarPdfsObra(obra.id);
+}
+
+/* ── abas ── */
+$$(".aba-obra").forEach(btn => {
+  btn.addEventListener("click", () => ativarAba(btn.dataset.aba));
+});
+
+function ativarAba(nome) {
+  $$(".aba-obra").forEach(b => b.classList.toggle("ativa", b.dataset.aba === nome));
+  const caps = $("aba-capitulos");
+  const pdfs = $("aba-pdfs");
+  if (nome === "capitulos") {
+    caps.style.display = "block";
+    pdfs.style.display = "none";
+  } else {
+    caps.style.display = "none";
+    pdfs.style.display = "flex";
+  }
+}
+
+/* ── capítulos ── */
+async function carregarCaps(obraId) {
+  const lista = $("lista-caps");
+  lista.innerHTML = "<p style='color:#6b7280;font-size:.85rem'>Carregando…</p>";
+  try {
+    const todos = await fetch("/api/capitulos").then(r => r.json());
+    const caps  = todos.filter(c => c.obra_id === obraId)
+                       .sort((a, b) => a.numero - b.numero);
+    if (!caps.length) {
+      lista.innerHTML = "<p style='color:#6b7280;font-size:.85rem;padding:.5rem 0'>Nenhum capítulo cadastrado.</p>";
+      return;
+    }
+    lista.innerHTML = caps.map(c => `
+      <div class="cap-item">
+        <span class="cap-num">Cap. ${c.numero}</span>
+        <span class="cap-titulo">${c.titulo}</span>
+      </div>
+    `).join("");
+  } catch {
+    lista.innerHTML = "<p style='color:#f87171;font-size:.85rem'>Erro ao carregar capítulos.</p>";
+  }
+}
+
+/* ── PDFs da obra ── */
+async function carregarPdfsObra(obraId) {
+  const container = $("lista-pdfs-obra");
+  container.innerHTML = "";
+  $("pdf-barra").style.display = "none";
+  $("pdf-frame").style.display = "none";
+
+  try {
+    const todos = await fetch("/api/pdf_urls").then(r => r.json());
+    const pdfs  = todos.filter(p => p.obra_id === obraId);
+
+    if (!pdfs.length) {
+      container.innerHTML = "<p class='sem-pdf'>Nenhum PDF disponível para esta obra.</p>";
+      return;
+    }
+    pdfs.forEach((p, i) => {
+      const card = document.createElement("div");
+      card.className = "pdf-link-card";
+      card.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>PDF ${i + 1}</span>
+      `;
+      card.addEventListener("click", () => abrirPdf(p.url, `PDF ${i + 1}`));
+      container.appendChild(card);
+    });
+  } catch {
+    container.innerHTML = "<p class='sem-pdf' style='color:#f87171'>Erro ao carregar PDFs.</p>";
+  }
+}
+
+function abrirPdf(url, nome) {
+  $("pdf-nome").textContent       = nome;
+  $("pdf-link-externo").href      = url;
+  $("pdf-barra").style.display    = "flex";
+  $("pdf-frame").src              = url;
+  $("pdf-frame").style.display    = "block";
+  $("lista-pdfs-obra").style.display = "none";
+}
+
+/* ── init ── */
+carregarObras();
+</script>
+</body>
+</html>
