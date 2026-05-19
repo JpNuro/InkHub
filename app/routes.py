@@ -6,7 +6,7 @@ Blueprints:
   api      → /api/...  (JSON)
 """
 
-import cloudinary.uploader
+#import cloudinary.uploader
 import flask as fk
 from sqlalchemy.exc import IntegrityError
 
@@ -153,43 +153,43 @@ def criar_capitulo():
 
 # ── API — Upload de PDF (protegido) ──────────────────────────────────────────
 
-@api.post("/upload_pdf")
-def upload_pdf():
-    negado = _api_auth()
-    if negado:
-        return negado
+# @api.post("/upload_pdf")
+# def upload_pdf():
+#     negado = _api_auth()
+#     if negado:
+#         return negado
 
-    arquivo = fk.request.files.get("arquivo")
-    obra_id = fk.request.form.get("obra_id")
+#     arquivo = fk.request.files.get("arquivo")
+#     obra_id = fk.request.form.get("obra_id")
 
-    if not arquivo or arquivo.filename == "":
-        return _erro("Nenhum arquivo enviado.")
-    if not arquivo.filename.lower().endswith(".pdf"):
-        return _erro("Apenas arquivos PDF são aceitos.")
-    if not obra_id:
-        return _erro("O campo 'obra_id' é obrigatório.")
+#     if not arquivo or arquivo.filename == "":
+#         return _erro("Nenhum arquivo enviado.")
+#     if not arquivo.filename.lower().endswith(".pdf"):
+#         return _erro("Apenas arquivos PDF são aceitos.")
+#     if not obra_id:
+#         return _erro("O campo 'obra_id' é obrigatório.")
 
-    try:
-        obra_id_int = int(obra_id)
-    except ValueError:
-        return _erro("'obra_id' deve ser um número inteiro.")
+#     try:
+#         obra_id_int = int(obra_id)
+#     except ValueError:
+#         return _erro("'obra_id' deve ser um número inteiro.")
 
-    try:
-        resultado = cloudinary.uploader.upload(
-            arquivo.stream,
-            resource_type="raw",
-            folder="inkhub/pdfs",
-            use_filename=True,
-            unique_filename=True,
-            overwrite=False,
-        )
-        url_pdf = resultado["secure_url"]
-    except Exception as e:
-        return _erro(f"Falha no upload para o Cloudinary: {e}", 502)
+#     try:
+#         resultado = cloudinary.uploader.upload(
+#             arquivo.stream,
+#             resource_type="raw",
+#             folder="inkhub/pdfs",
+#             use_filename=True,
+#             unique_filename=True,
+#             overwrite=False,
+#         )
+#         url_pdf = resultado["secure_url"]
+#     except Exception as e:
+#         return _erro(f"Falha no upload para o Cloudinary: {e}", 502)
 
-    try:
-        registro = servicos.cadastrar_pdf_url({"url": url_pdf, "obra_id": obra_id_int})
-    except ValueError as e:
-        return _erro(str(e))
+#     try:
+#         registro = servicos.cadastrar_pdf_url({"url": url_pdf, "obra_id": obra_id_int})
+#     except ValueError as e:
+#         return _erro(str(e))
 
-    return fk.jsonify(registro), 201
+#     return fk.jsonify(registro), 201
