@@ -3,46 +3,846 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InkHub</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <title>InkHub — Painel</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0f13;
+      --surface:  #16161f;
+      --surface2: #1a1a24;
+      --border:   #2a2a3a;
+      --purple:   #7c3aed;
+      --purple-d: #6d28d9;
+      --purple-l: #a78bfa;
+      --purple-x: #4c1d95;
+      --purple-bg:#1e1030;
+      --text:     #e2e2e2;
+      --muted:    #9ca3af;
+      --dim:      #6b7280;
+      --ok:       #4ade80;
+      --err:      #f87171;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Topo ── */
+    .topo {
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      height: 56px;
+      background: var(--surface2);
+      border-bottom: 2px solid var(--purple);
+      flex-shrink: 0;
+      gap: 1rem;
+    }
+    .logo { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+    .logo span { color: var(--purple); }
+    .topo-sub { font-size: .9rem; color: var(--dim); font-weight: 400; }
+    .topo-direita { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
+    .topo-usuario { font-size: .85rem; color: var(--muted); }
+    .topo-usuario strong { color: var(--purple-l); }
+
+    .btn-link {
+      font-size: .82rem;
+      color: var(--dim);
+      text-decoration: none;
+      padding: .3rem .7rem;
+      border-radius: 6px;
+      transition: color .15s, background .15s;
+    }
+    .btn-link:hover { color: var(--purple-l); background: var(--purple-bg); }
+
+    .btn-logout {
+      font-size: .82rem;
+      color: var(--purple-l);
+      text-decoration: none;
+      border: 1px solid var(--purple-x);
+      border-radius: 6px;
+      padding: .3rem .75rem;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: var(--purple-x); color: #fff; }
+
+    /* ── Abas principais ── */
+    .abas-nav {
+      display: flex;
+      gap: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    .aba-nav {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      padding: .75rem 1.1rem;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .aba-nav.ativa { color: var(--purple-l); border-bottom-color: var(--purple); }
+
+    /* ── Conteúdo das abas ── */
+    .aba-conteudo { display: none; flex: 1; }
+    .aba-conteudo.ativa { display: flex; }
+
+    /* ── Layout duas colunas (formulário + tabela) ── */
+    .dois-col {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 0;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Formulário */
+    .col-form {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    .col-form h2 { font-size: 1rem; color: var(--purple-l); margin-bottom: 1.2rem; }
+
+    .campo { margin-bottom: 1rem; }
+    .campo label {
+      display: block;
+      font-size: .8rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: .35rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .campo input, .campo select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: .55rem .8rem;
+      font-size: .9rem;
+      transition: border-color .15s;
+    }
+    .campo input:focus, .campo select:focus { outline: none; border-color: var(--purple); }
+    .campo select option { background: var(--surface2); }
+
+    .btn-cadastrar {
+      width: 100%;
+      background: var(--purple);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: .95rem;
+      font-weight: 700;
+      padding: .65rem;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: background .15s;
+    }
+    .btn-cadastrar:hover { background: var(--purple-d); }
+
+    .msg-form {
+      margin-top: .75rem;
+      font-size: .83rem;
+      min-height: 1.2em;
+      text-align: center;
+    }
+    .msg-ok  { color: var(--ok); }
+    .msg-err { color: var(--err); }
+
+    /* Tabela */
+    .col-tabela {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 1.5rem;
+      gap: 1rem;
+    }
+    .tabela-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tabela-header h2 { font-size: 1rem; color: var(--text); }
+
+    .btn-reload {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      border-radius: 6px;
+      padding: .3rem .75rem;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-reload:hover { border-color: var(--purple); color: var(--purple-l); }
+
+    .tabela-wrap { flex: 1; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    thead th {
+      text-align: left;
+      padding: .55rem .85rem;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: .6rem .85rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:hover td { background: var(--surface); }
+    .status-tabela { font-size: .85rem; color: var(--dim); }
+
+    /* ── Aba Upload PDF (Cloudinary) ── */
+    .upload-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .upload-form {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+    .upload-form h2 { font-size: 1rem; color: var(--purple-l); }
+
+    /* drop zone */
+    .drop-zone {
+      border: 2px dashed var(--purple-x);
+      border-radius: 12px;
+      padding: 1.75rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .drop-zone:hover, .drop-zone.over { background: var(--purple-bg); border-color: var(--purple); }
+
+    .drop-zone .drop-icon { font-size: 2rem; margin-bottom: .5rem; }
+    .drop-zone p   { font-size: .88rem; color: var(--muted); }
+    .drop-zone small { font-size: .78rem; color: var(--dim); }
+    .drop-zone input { display: none; }
+
+    #nome-arquivo {
+      font-size: .82rem;
+      color: var(--purple-l);
+      background: rgba(124,58,237,.1);
+      border-radius: 6px;
+      padding: .4rem .75rem;
+      display: none;
+      word-break: break-all;
+    }
+
+    .btn-upload {
+      background: var(--purple);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: .95rem;
+      font-weight: 700;
+      padding: .65rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-upload:hover:not(:disabled) { background: var(--purple-d); }
+    .btn-upload:disabled { opacity: .45; cursor: not-allowed; }
+
+    .progress-bar-wrap {
+      background: var(--border);
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--purple);
+      width: 0%;
+      transition: width .3s;
+      border-radius: 99px;
+    }
+
+    .msg-upload { font-size: .83rem; min-height: 1.2em; }
+    .msg-upload.ok  { color: var(--ok); }
+    .msg-upload.err { color: var(--err); }
+
+    /* lista de PDFs enviados */
+    .pdfs-enviados {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    .pdfs-enviados h2 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pdf-card-admin {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .8rem 1rem;
+      margin-bottom: .5rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .pdf-card-admin svg { width: 22px; height: 22px; color: var(--purple-l); flex-shrink: 0; }
+    .pdf-card-admin .pc-info { flex: 1; min-width: 0; }
+    .pdf-card-admin .pc-obra  { font-weight: 600; font-size: .88rem; }
+    .pdf-card-admin .pc-url   { font-size: .75rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdf-card-admin a { color: var(--purple-l); font-size: .78rem; text-decoration: none; flex-shrink: 0; }
+    .pdf-card-admin a:hover { text-decoration: underline; }
+
+    .status-upload-lista { font-size: .85rem; color: var(--dim); padding: .25rem 0; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
 </head>
 <body>
-  <header class="topo">
-    <h1>InkHub</h1>
-    <!-- <p class="subtitulo">Consumindo a API <code>/api/...</code></p> -->
-  </header>
 
-  <nav class="abas">
-    <button class="aba ativa" data-tipo="usuarios">Usuários</button>
-    <button class="aba" data-tipo="obras">Obras</button>
-    <button class="aba" data-tipo="capitulos">Capítulos</button>
-  </nav>
+<!-- Topo -->
+<header class="topo">
+  <div class="logo">Ink<span>Hub</span></div>
+  <span class="topo-sub">/ Painel admin</span>
+  <div class="topo-direita">
+    <span class="topo-usuario">Olá, <strong>{{ usuario_nome }}</strong></span>
+    <a href="/" class="btn-link">Ver catálogo</a>
+    <a href="/logout" class="btn-logout">Sair</a>
+  </div>
+</header>
 
-  <main class="conteudo">
-    <section id="painel-formulario">
-      <h2 id="titulo-formulario">Novo professor</h2>
-      <form id="formulario" novalidate>
-        <div id="campos" class="grade-campos"></div>
-        <div class="acoes-formulario">
-          <button type="submit" class="botao-primario">Cadastrar</button>
-          <span id="mensagem-formulario" class="mensagem"></span>
-        </div>
-      </form>
-    </section>
+<!-- Abas -->
+<nav class="abas-nav">
+  <button class="aba-nav ativa" data-aba="usuarios">Usuários</button>
+  <button class="aba-nav"       data-aba="obras">Obras</button>
+  <button class="aba-nav"       data-aba="capitulos">Capítulos</button>
+  <button class="aba-nav"       data-aba="pdfs">PDFs (Cloudinary)</button>
+</nav>
 
-    <section id="painel-tabela">
-      <div class="cabecalho-painel">
-        <h2 id="titulo-lista">Professores</h2>
-        <button id="botao-recarregar" type="button">Recarregar</button>
+<!-- ══════════ ABA USUÁRIOS ══════════ -->
+<div class="aba-conteudo ativa" id="aba-usuarios">
+  <div class="dois-col">
+    <div class="col-form">
+      <h2>Novo usuário</h2>
+      <div class="campo">
+        <label>Nome *</label>
+        <input id="u-nome" type="text" placeholder="Nome completo" />
       </div>
-      <div id="status" class="status"></div>
-      <table id="tabela">
-        <thead><tr id="cabecalho"></tr></thead>
-        <tbody id="corpo"></tbody>
-      </table>
-    </section>
-  </main>
+      <div class="campo">
+        <label>E-mail</label>
+        <input id="u-email" type="email" placeholder="email@exemplo.com" />
+      </div>
+      <div class="campo">
+        <label>Senha</label>
+        <input id="u-senha" type="password" placeholder="Senha de acesso" />
+      </div>
+      <button class="btn-cadastrar" id="btn-usuario">Cadastrar usuário</button>
+      <div class="msg-form" id="msg-usuario"></div>
+    </div>
+    <div class="col-tabela">
+      <div class="tabela-header">
+        <h2>Usuários cadastrados</h2>
+        <button class="btn-reload" data-reload="usuarios">↺ Recarregar</button>
+      </div>
+      <div class="status-tabela" id="status-usuarios"></div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Nome</th><th>E-mail</th></tr></thead>
+          <tbody id="tbody-usuarios"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+<!-- ══════════ ABA OBRAS ══════════ -->
+<div class="aba-conteudo" id="aba-obras">
+  <div class="dois-col">
+    <div class="col-form">
+      <h2>Nova obra</h2>
+      <div class="campo">
+        <label>Título *</label>
+        <input id="o-titulo" type="text" placeholder="Título da obra" />
+      </div>
+      <div class="campo">
+        <label>Autor *</label>
+        <select id="o-autor">
+          <option value="">— Selecione o autor —</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Categoria</label>
+        <input id="o-categoria" type="text" placeholder="Shonen, Seinen…" />
+      </div>
+      <div class="campo">
+        <label>Ano</label>
+        <input id="o-ano" type="number" placeholder="2024" />
+      </div>
+      <div class="campo">
+        <label>Editora</label>
+        <input id="o-editora" type="text" placeholder="Nome da editora" />
+      </div>
+      <button class="btn-cadastrar" id="btn-obra">Cadastrar obra</button>
+      <div class="msg-form" id="msg-obra"></div>
+    </div>
+    <div class="col-tabela">
+      <div class="tabela-header">
+        <h2>Obras cadastradas</h2>
+        <button class="btn-reload" data-reload="obras">↺ Recarregar</button>
+      </div>
+      <div class="status-tabela" id="status-obras"></div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Título</th><th>Autor</th></tr></thead>
+          <tbody id="tbody-obras"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ABA CAPÍTULOS ══════════ -->
+<div class="aba-conteudo" id="aba-capitulos">
+  <div class="dois-col">
+    <div class="col-form">
+      <h2>Novo capítulo</h2>
+      <div class="campo">
+        <label>Obra *</label>
+        <select id="c-obra">
+          <option value="">— Selecione a obra —</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Número</label>
+        <input id="c-numero" type="number" placeholder="1" />
+      </div>
+      <div class="campo">
+        <label>Título *</label>
+        <input id="c-titulo" type="text" placeholder="Título do capítulo" />
+      </div>
+      <button class="btn-cadastrar" id="btn-capitulo">Cadastrar capítulo</button>
+      <div class="msg-form" id="msg-capitulo"></div>
+    </div>
+    <div class="col-tabela">
+      <div class="tabela-header">
+        <h2>Capítulos cadastrados</h2>
+        <button class="btn-reload" data-reload="capitulos">↺ Recarregar</button>
+      </div>
+      <div class="status-tabela" id="status-capitulos"></div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Número</th><th>Título</th><th>Obra</th></tr></thead>
+          <tbody id="tbody-capitulos"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ABA PDFs CLOUDINARY ══════════ -->
+<div class="aba-conteudo" id="aba-pdfs">
+  <div class="upload-layout">
+
+    <!-- Formulário de upload -->
+    <div class="upload-form">
+      <h2>Enviar PDF para o Cloudinary</h2>
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-icon">📄</div>
+        <p>Arraste o PDF aqui</p>
+        <small>ou clique para selecionar</small>
+        <input type="file" id="input-pdf" accept="application/pdf" />
+      </div>
+
+      <div id="nome-arquivo"></div>
+
+      <div class="campo">
+        <label>Obra *</label>
+        <select id="pdf-obra">
+          <option value="">— Selecione a obra —</option>
+        </select>
+      </div>
+
+      <div class="progress-bar-wrap" id="progress-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <button class="btn-upload" id="btn-upload" disabled>
+        ☁ Enviar para a nuvem
+      </button>
+
+      <div class="msg-upload" id="msg-upload"></div>
+    </div>
+
+    <!-- Lista de PDFs enviados -->
+    <div class="pdfs-enviados">
+      <h2>
+        PDFs cadastrados
+        <button class="btn-reload" data-reload="pdfs" style="font-size:.8rem">↺</button>
+      </h2>
+      <div class="status-upload-lista" id="status-pdfs"></div>
+      <div id="lista-pdfs-admin"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   Utilitários
+══════════════════════════════════════════════ */
+const $  = id  => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const api = path => fetch(path).then(r => r.json());
+
+function setMsg(elId, texto, tipo) {
+  const el = $(elId);
+  el.textContent  = texto;
+  el.className    = "msg-form " + (tipo === "ok" ? "msg-ok" : tipo === "err" ? "msg-err" : "");
+}
+
+/* ══════════════════════════════════════════════
+   Abas
+══════════════════════════════════════════════ */
+$$(".aba-nav").forEach(btn => {
+  btn.addEventListener("click", () => {
+    $$(".aba-nav").forEach(b => b.classList.remove("ativa"));
+    $$(".aba-conteudo").forEach(c => c.classList.remove("ativa"));
+    btn.classList.add("ativa");
+    $("aba-" + btn.dataset.aba).classList.add("ativa");
+  });
+});
+
+/* ══════════════════════════════════════════════
+   Dados em memória
+══════════════════════════════════════════════ */
+let usuarios = [], obras = [], capitulos = [], pdfs = [];
+
+async function carregarTodos() {
+  [usuarios, obras, capitulos, pdfs] = await Promise.all([
+    api("/api/usuarios"),
+    api("/api/obras"),
+    api("/api/capitulos"),
+    api("/api/pdf_urls"),
+  ]);
+  renderUsuarios();
+  renderObras();
+  renderCapitulos();
+  renderPdfsAdmin();
+  popularSelects();
+}
+
+/* ══════════════════════════════════════════════
+   Selects
+══════════════════════════════════════════════ */
+function popularSelects() {
+  // Autor (select de obras)
+  const selAutor = $("o-autor");
+  const curAutor = selAutor.value;
+  selAutor.innerHTML = '<option value="">— Selecione o autor —</option>';
+  usuarios.forEach(u => {
+    const o = document.createElement("option");
+    o.value = u.id; o.textContent = u.nome;
+    selAutor.appendChild(o);
+  });
+  selAutor.value = curAutor;
+
+  // Obra (select de capítulos)
+  const selObraC = $("c-obra");
+  const curObraC = selObraC.value;
+  selObraC.innerHTML = '<option value="">— Selecione a obra —</option>';
+  obras.forEach(o => {
+    const opt = document.createElement("option");
+    opt.value = o.id; opt.textContent = o.titulo;
+    selObraC.appendChild(opt);
+  });
+  selObraC.value = curObraC;
+
+  // Obra (select de PDFs)
+  const selObraP = $("pdf-obra");
+  const curObraP = selObraP.value;
+  selObraP.innerHTML = '<option value="">— Selecione a obra —</option>';
+  obras.forEach(o => {
+    const opt = document.createElement("option");
+    opt.value = o.id; opt.textContent = o.titulo;
+    selObraP.appendChild(opt);
+  });
+  selObraP.value = curObraP;
+  atualizarBtnUpload();
+}
+
+/* ══════════════════════════════════════════════
+   Render tabelas
+══════════════════════════════════════════════ */
+function renderUsuarios() {
+  const tb = $("tbody-usuarios");
+  $("status-usuarios").textContent = usuarios.length ? "" : "Nenhum usuário cadastrado.";
+  tb.innerHTML = usuarios.map(u => `
+    <tr><td>${u.id}</td><td>${u.nome}</td><td>${u.email || "—"}</td></tr>
+  `).join("");
+}
+
+function renderObras() {
+  const tb = $("tbody-obras");
+  $("status-obras").textContent = obras.length ? "" : "Nenhuma obra cadastrada.";
+  tb.innerHTML = obras.map(o => `
+    <tr><td>${o.id}</td><td>${o.titulo}</td><td>${o.autor || "—"}</td></tr>
+  `).join("");
+}
+
+function renderCapitulos() {
+  const mapaObras = Object.fromEntries(obras.map(o => [o.id, o.titulo]));
+  const tb = $("tbody-capitulos");
+  $("status-capitulos").textContent = capitulos.length ? "" : "Nenhum capítulo cadastrado.";
+  tb.innerHTML = capitulos
+    .sort((a, b) => (a.obra_id - b.obra_id) || (a.numero || 0) - (b.numero || 0))
+    .map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.numero ?? "—"}</td>
+        <td>${c.titulo}</td>
+        <td>${mapaObras[c.obra_id] || c.obra_id}</td>
+      </tr>
+    `).join("");
+}
+
+function renderPdfsAdmin() {
+  const mapaObras = Object.fromEntries(obras.map(o => [o.id, o.titulo]));
+  const lista = $("lista-pdfs-admin");
+  $("status-pdfs").textContent = pdfs.length ? "" : "Nenhum PDF enviado ainda.";
+  lista.innerHTML = pdfs.map(p => `
+    <div class="pdf-card-admin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <div class="pc-info">
+        <div class="pc-obra">${mapaObras[p.obra_id] || "Obra #" + p.obra_id}</div>
+        <div class="pc-url">${p.url}</div>
+      </div>
+      <a href="${p.url}" target="_blank">Abrir ↗</a>
+    </div>
+  `).join("");
+}
+
+/* ══════════════════════════════════════════════
+   Recarregar individualmente
+══════════════════════════════════════════════ */
+$$("[data-reload]").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    switch (btn.dataset.reload) {
+      case "usuarios":
+        usuarios = await api("/api/usuarios");
+        renderUsuarios(); popularSelects(); break;
+      case "obras":
+        obras = await api("/api/obras");
+        renderObras(); popularSelects(); break;
+      case "capitulos":
+        capitulos = await api("/api/capitulos");
+        renderCapitulos(); break;
+      case "pdfs":
+        pdfs = await api("/api/pdf_urls");
+        renderPdfsAdmin(); break;
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════
+   Cadastrar usuário
+══════════════════════════════════════════════ */
+$("btn-usuario").addEventListener("click", async () => {
+  const dados = {
+    nome:  $("u-nome").value,
+    email: $("u-email").value,
+    senha: $("u-senha").value,
+  };
+  try {
+    const r = await fetch("/api/usuarios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "Erro");
+    setMsg("msg-usuario", "✓ Usuário cadastrado!", "ok");
+    $("u-nome").value = $("u-email").value = $("u-senha").value = "";
+    usuarios = await api("/api/usuarios");
+    renderUsuarios(); popularSelects();
+  } catch (e) { setMsg("msg-usuario", "✗ " + e.message, "err"); }
+});
+
+/* ══════════════════════════════════════════════
+   Cadastrar obra
+══════════════════════════════════════════════ */
+$("btn-obra").addEventListener("click", async () => {
+  const dados = {
+    titulo_obra: $("o-titulo").value,
+    autor_id:    $("o-autor").value,
+    categoria:   $("o-categoria").value,
+    ano:         $("o-ano").value,
+    editora:     $("o-editora").value,
+  };
+  try {
+    const r = await fetch("/api/obras", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "Erro");
+    setMsg("msg-obra", "✓ Obra cadastrada!", "ok");
+    $("o-titulo").value = $("o-categoria").value = $("o-ano").value = $("o-editora").value = "";
+    obras = await api("/api/obras");
+    renderObras(); popularSelects();
+  } catch (e) { setMsg("msg-obra", "✗ " + e.message, "err"); }
+});
+
+/* ══════════════════════════════════════════════
+   Cadastrar capítulo
+══════════════════════════════════════════════ */
+$("btn-capitulo").addEventListener("click", async () => {
+  const dados = {
+    titulo_capitulo: $("c-titulo").value,
+    numero_capitulo: $("c-numero").value,
+    obra_id:         $("c-obra").value,
+  };
+  try {
+    const r = await fetch("/api/capitulos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "Erro");
+    setMsg("msg-capitulo", "✓ Capítulo cadastrado!", "ok");
+    $("c-titulo").value = $("c-numero").value = "";
+    capitulos = await api("/api/capitulos");
+    renderCapitulos();
+  } catch (e) { setMsg("msg-capitulo", "✗ " + e.message, "err"); }
+});
+
+/* ══════════════════════════════════════════════
+   Upload PDF → Cloudinary
+══════════════════════════════════════════════ */
+let arquivoPdf = null;
+
+const dropZone = $("drop-zone");
+const inputPdf = $("input-pdf");
+
+dropZone.addEventListener("click", () => inputPdf.click());
+dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("over"));
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("over");
+  const f = e.dataTransfer.files[0];
+  if (f?.type === "application/pdf") definirArquivo(f);
+  else mostrarMsgUpload("Apenas arquivos PDF são aceitos.", "err");
+});
+inputPdf.addEventListener("change", () => {
+  if (inputPdf.files[0]) definirArquivo(inputPdf.files[0]);
+});
+$("pdf-obra").addEventListener("change", atualizarBtnUpload);
+
+function definirArquivo(f) {
+  arquivoPdf = f;
+  const nomeEl = $("nome-arquivo");
+  nomeEl.textContent = "📎 " + f.name;
+  nomeEl.style.display = "block";
+  atualizarBtnUpload();
+  mostrarMsgUpload("", "");
+}
+
+function atualizarBtnUpload() {
+  $("btn-upload").disabled = !(arquivoPdf && $("pdf-obra").value);
+}
+
+function mostrarMsgUpload(texto, tipo) {
+  const el = $("msg-upload");
+  el.textContent = texto;
+  el.className   = "msg-upload " + (tipo === "ok" ? "ok" : tipo === "err" ? "err" : "");
+}
+
+$("btn-upload").addEventListener("click", async () => {
+  if (!arquivoPdf || !$("pdf-obra").value) return;
+
+  $("btn-upload").disabled = true;
+  mostrarMsgUpload("Enviando para o Cloudinary…", "");
+
+  // Barra de progresso simulada (o fetch não expõe progresso de upload facilmente)
+  const wrap = $("progress-wrap");
+  const bar  = $("progress-bar");
+  wrap.style.display = "block";
+  bar.style.width = "0%";
+  const tick = setInterval(() => {
+    const atual = parseFloat(bar.style.width);
+    if (atual < 85) bar.style.width = (atual + 3) + "%";
+  }, 200);
+
+  try {
+    const fd = new FormData();
+    fd.append("arquivo", arquivoPdf);
+    fd.append("obra_id", $("pdf-obra").value);
+
+    const r = await fetch("/api/upload_pdf", { method: "POST", body: fd });
+    const d = await r.json();
+
+    clearInterval(tick);
+    bar.style.width = "100%";
+    setTimeout(() => { wrap.style.display = "none"; bar.style.width = "0%"; }, 600);
+
+    if (!r.ok) throw new Error(d.erro || "Erro no upload");
+
+    mostrarMsgUpload("✓ PDF enviado e URL salva no banco!", "ok");
+
+    // limpar
+    arquivoPdf = null;
+    $("nome-arquivo").style.display = "none";
+    $("nome-arquivo").textContent   = "";
+    inputPdf.value = "";
+    atualizarBtnUpload();
+
+    // recarregar lista
+    pdfs = await api("/api/pdf_urls");
+    renderPdfsAdmin();
+
+  } catch (e) {
+    clearInterval(tick);
+    wrap.style.display = "none";
+    mostrarMsgUpload("✗ " + e.message, "err");
+    $("btn-upload").disabled = false;
+  }
+});
+
+/* ══════════════════════════════════════════════
+   Init
+══════════════════════════════════════════════ */
+carregarTodos();
+</script>
 </body>
 </html>
