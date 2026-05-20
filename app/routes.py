@@ -11,6 +11,9 @@ import flask as fk
 from sqlalchemy.exc import IntegrityError
 
 import servicos
+from werkzeug.security import check_password_hash, generate_password_hash
+from database import SessionLocal
+from models import Usuario
 
 # ── Blueprints ────────────────────────────────────────────────────────────────
 
@@ -51,7 +54,33 @@ def login_post():
 
     usuario = servicos.buscar_usuario_por_email(email)
 
-    if usuario is None or usuario.get("senha") != senha:
+    if usuario is None:
+        return fk.render_template(
+            "login.html",
+            erro="E-mail ou senha incorretos.",
+            email_salvo=email,
+        ), 401
+
+    stored = usuario.get("senha") or ""
+    ok = False
+    # detectar formatos de hash comuns e usar check_password_hash; caso contrário, comparar texto plano
+    if stored.startswith("pbkdf2:") or stored.startswith("scrypt:") or stored.startswith("argon2:"):
+        ok = check_password_hash(stored, senha)
+    else:
+        ok = (stored == senha)
+        # se a senha no banco era texto plano e confere, migrar para hash
+        if ok:
+            session = SessionLocal()
+            try:
+                u = session.get(Usuario, usuario["id"])
+                if u is not None:
+                    u.senha = generate_password_hash(senha)
+                    session.add(u)
+                    session.commit()
+            finally:
+                session.close()
+
+    if not ok:
         return fk.render_template(
             "login.html",
             erro="E-mail ou senha incorretos.",
@@ -133,6 +162,8 @@ def criar_obra():
     if negado:
         return negado
     dados = fk.request.get_json(silent=True) or {}
+    # garantir que a obra será registrada com o usuário autenticado
+    dados["autor_id"] = fk.session.get("usuario_id")
     try:
         return fk.jsonify(servicos.cadastrar_obra(dados)), 201
     except ValueError as e:
@@ -145,10 +176,69 @@ def criar_capitulo():
     if negado:
         return negado
     dados = fk.request.get_json(silent=True) or {}
+    # passar o id do usuário autenticado para validação de propriedade
+    dados["usuario_id"] = fk.session.get("usuario_id")
     try:
         return fk.jsonify(servicos.cadastrar_capitulo(dados)), 201
     except ValueError as e:
         return _erro(str(e))
+
+
+# ── API — Minhas obras / meus capítulos (protegido) ─────────────────────────
+
+
+@api.get("/minhas_obras")
+def get_minhas_obras():
+    negado = _api_auth()
+    if negado:
+        return negado
+    usuario_id = fk.session.get("usuario_id")
+    try:
+        # filtra obras por autor_id
+        session = servicos.SessionLocal if hasattr(servicos, 'SessionLocal') else None
+        obras = [o for o in servicos.listar_obras() if o.get('autor') and (o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'))]
+        return fk.jsonify(obras)
+    except Exception:
+        return fk.jsonify([])
+
+
+@api.get("/meus_capitulos")
+def get_meus_capitulos():
+    negado = _api_auth()
+    if negado:
+        return negado
+    usuario_id = fk.session.get("usuario_id")
+    try:
+        minhas = []
+        for o in servicos.listar_obras():
+            if o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'):
+                minhas.append(o['id'])
+        capitulos = [c for c in servicos.listar_capitulos() if c.get('obra_id') in minhas]
+        return fk.jsonify(capitulos)
+    except Exception:
+        return fk.jsonify([])
+
+
+# ── Registro público na tela de login
+
+
+@paginas.post("/register")
+def register_post():
+    if "usuario_id" in fk.session:
+        return fk.redirect(fk.url_for("paginas.painel"))
+    nome = (fk.request.form.get("nome") or "").strip()
+    email = (fk.request.form.get("email") or "").strip()
+    senha = (fk.request.form.get("senha") or "").strip()
+    try:
+        usuario = servicos.cadastrar_usuario({"nome": nome, "email": email, "senha": senha})
+    except IntegrityError:
+        return fk.render_template("login.html", erro="E-mail já cadastrado.", email_salvo=email), 409
+    except ValueError as e:
+        return fk.render_template("login.html", erro=str(e), email_salvo=email), 400
+
+    fk.session["usuario_id"] = usuario["id"]
+    fk.session["usuario_nome"] = usuario["nome"]
+    return fk.redirect(fk.url_for("paginas.painel"))
 
 
 # ── API — Upload de PDF (protegido) ──────────────────────────────────────────

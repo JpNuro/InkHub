@@ -180,6 +180,24 @@
     <button class="btn-entrar" type="submit">Entrar</button>
   </form>
 
+  <hr style="margin:1.2rem 0; border-color:#222;">
+
+  <form method="POST" action="/register">
+    <div class="campo">
+      <label for="nome">Nome</label>
+      <input id="nome" name="nome" type="text" placeholder="Seu nome completo" autocomplete="name" required />
+    </div>
+    <div class="campo">
+      <label for="email_reg">E-mail</label>
+      <input id="email_reg" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required />
+    </div>
+    <div class="campo">
+      <label for="senha_reg">Senha</label>
+      <input id="senha_reg" name="senha" type="password" placeholder="Senha de acesso" autocomplete="new-password" required />
+    </div>
+    <button class="btn-entrar" type="submit">Cadastrar</button>
+  </form>
+
   <a class="voltar" href="/">← Voltar para o catálogo</a>
 </div>
 

@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from database import SessionLocal
 from models import Usuario, Obra, Capitulo, PdfUrl
+from werkzeug.security import generate_password_hash
 
 
 # ── Listagens ─────────────────────────────────────────────────────────────────
@@ -89,10 +90,11 @@ def _texto_opcional(valor):
 def cadastrar_usuario(dados):
     nome  = _texto_obrigatorio(dados.get("nome"), "nome")
     email = _texto_opcional(dados.get("email"))
+    senha = _texto_opcional(dados.get("senha"))
 
     session = SessionLocal()
     try:
-        usuario = Usuario(nome=nome, email=email)
+        usuario = Usuario(nome=nome, email=email, senha=(generate_password_hash(senha) if senha else None))
         session.add(usuario)
         session.commit()
         session.refresh(usuario)
@@ -140,11 +142,22 @@ def cadastrar_capitulo(dados):
     numero_capitulo = _texto_obrigatorio(dados.get("numero_capitulo"), "numero_capitulo")
     obra_id         = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
 
+    # Opcional: validar se o usuário que está criando o capítulo é dono da obra
+    usuario_id = dados.get("usuario_id")
+
     session = SessionLocal()
     try:
         obra = session.get(Obra, int(obra_id))
         if obra is None:
             raise ValueError(f"Obra {obra_id} não encontrada.")
+
+        if usuario_id is not None:
+            try:
+                uid = int(usuario_id)
+            except ValueError:
+                raise ValueError("'usuario_id' inválido")
+            if obra.autor_id != uid:
+                raise ValueError("Você não tem permissão para adicionar capítulos a esta obra.")
 
         capitulo = Capitulo(
             titulo_capitulo=titulo_capitulo,

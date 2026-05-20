@@ -391,10 +391,8 @@
         <input id="o-titulo" type="text" placeholder="Título da obra" />
       </div>
       <div class="campo">
-        <label>Autor *</label>
-        <select id="o-autor">
-          <option value="">— Selecione o autor —</option>
-        </select>
+        <label>Autor</label>
+        <input type="text" value="{{ usuario_nome }}" readonly />
       </div>
       <div class="campo">
         <label>Categoria</label>
@@ -546,8 +544,8 @@ let usuarios = [], obras = [], capitulos = [], pdfs = [];
 async function carregarTodos() {
   [usuarios, obras, capitulos, pdfs] = await Promise.all([
     api("/api/usuarios"),
-    api("/api/obras"),
-    api("/api/capitulos"),
+    api("/api/minhas_obras"),
+    api("/api/meus_capitulos"),
     api("/api/pdf_urls"),
   ]);
   renderUsuarios();
@@ -561,16 +559,7 @@ async function carregarTodos() {
    Selects
 ══════════════════════════════════════════════ */
 function popularSelects() {
-  // Autor (select de obras)
-  const selAutor = $("o-autor");
-  const curAutor = selAutor.value;
-  selAutor.innerHTML = '<option value="">— Selecione o autor —</option>';
-  usuarios.forEach(u => {
-    const o = document.createElement("option");
-    o.value = u.id; o.textContent = u.nome;
-    selAutor.appendChild(o);
-  });
-  selAutor.value = curAutor;
+  // O autor é o usuário autenticado (mostrado como texto no formulário)
 
   // Obra (select de capítulos)
   const selObraC = $("c-obra");
@@ -660,10 +649,10 @@ $$("[data-reload]").forEach(btn => {
         usuarios = await api("/api/usuarios");
         renderUsuarios(); popularSelects(); break;
       case "obras":
-        obras = await api("/api/obras");
+        obras = await api("/api/minhas_obras");
         renderObras(); popularSelects(); break;
       case "capitulos":
-        capitulos = await api("/api/capitulos");
+        capitulos = await api("/api/meus_capitulos");
         renderCapitulos(); break;
       case "pdfs":
         pdfs = await api("/api/pdf_urls");
@@ -702,7 +691,6 @@ $("btn-usuario").addEventListener("click", async () => {
 $("btn-obra").addEventListener("click", async () => {
   const dados = {
     titulo_obra: $("o-titulo").value,
-    autor_id:    $("o-autor").value,
     categoria:   $("o-categoria").value,
     ano:         $("o-ano").value,
     editora:     $("o-editora").value,
@@ -717,7 +705,7 @@ $("btn-obra").addEventListener("click", async () => {
     if (!r.ok) throw new Error(d.erro || "Erro");
     setMsg("msg-obra", "✓ Obra cadastrada!", "ok");
     $("o-titulo").value = $("o-categoria").value = $("o-ano").value = $("o-editora").value = "";
-    obras = await api("/api/obras");
+    obras = await api("/api/minhas_obras");
     renderObras(); popularSelects();
   } catch (e) { setMsg("msg-obra", "✗ " + e.message, "err"); }
 });
@@ -741,7 +729,7 @@ $("btn-capitulo").addEventListener("click", async () => {
     if (!r.ok) throw new Error(d.erro || "Erro");
     setMsg("msg-capitulo", "✓ Capítulo cadastrado!", "ok");
     $("c-titulo").value = $("c-numero").value = "";
-    capitulos = await api("/api/capitulos");
+    capitulos = await api("/api/meus_capitulos");
     renderCapitulos();
   } catch (e) { setMsg("msg-capitulo", "✗ " + e.message, "err"); }
 });

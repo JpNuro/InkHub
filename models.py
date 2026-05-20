@@ -21,7 +21,7 @@ class Obra(Base):
 
     def to_dict(self):
         autor_nome = self.autor.nome if self.autor else None
-        return {"id": self.id, "titulo": self.titulo_obra, "autor": autor_nome}
+        return {"id": self.id, "titulo": self.titulo_obra, "autor": autor_nome, "autor_id": self.autor_id}
 
     def __repr__(self):
         return f"<Obra {self.id} {self.titulo_obra!r}>"
