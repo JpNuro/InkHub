@@ -69,11 +69,13 @@ class PdfUrl(Base):
     id = Column(Integer, primary_key=True)
     url = Column(String(200), nullable=False)
     obra_id = Column(Integer, ForeignKey("obras.id"), nullable=False)
+    capitulo_id = Column(Integer, ForeignKey("capitulos.id"), nullable=True)
 
     obra = relationship("Obra", back_populates="pdf_urls")
+    capitulo = relationship("Capitulo")
 
     def to_dict(self):
-        return {"id": self.id, "url": self.url, "obra_id": self.obra_id}
+        return {"id": self.id, "url": self.url, "obra_id": self.obra_id, "capitulo_id": self.capitulo_id}
 
     def __repr__(self):
         return f"<pdf_url {self.id} {self.url!r}>"

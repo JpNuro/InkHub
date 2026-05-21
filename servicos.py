@@ -177,8 +177,10 @@ def cadastrar_capitulo(dados):
 
 def cadastrar_pdf_url(dados):
     """Salva no banco a URL pública de um PDF já enviado à nuvem."""
-    url     = _texto_obrigatorio(dados.get("url"), "url")
-    obra_id = dados.get("obra_id")
+    url        = _texto_obrigatorio(dados.get("url"), "url")
+    obra_id    = dados.get("obra_id")
+    capitulo_id = dados.get("capitulo_id")
+
     if not obra_id:
         raise ValueError("O campo 'obra_id' é obrigatório.")
     obra_id = int(obra_id)
@@ -189,7 +191,16 @@ def cadastrar_pdf_url(dados):
         if obra is None:
             raise ValueError(f"Obra {obra_id} não encontrada.")
 
-        pdf = PdfUrl(url=url, obra_id=obra_id)
+        # Validar capitulo_id se fornecido
+        if capitulo_id:
+            capitulo_id = int(capitulo_id)
+            capitulo = session.get(Capitulo, capitulo_id)
+            if capitulo is None:
+                raise ValueError(f"Capítulo {capitulo_id} não encontrado.")
+            if capitulo.obra_id != obra_id:
+                raise ValueError("O capítulo não pertence a esta obra.")
+
+        pdf = PdfUrl(url=url, obra_id=obra_id, capitulo_id=capitulo_id)
         session.add(pdf)
         session.commit()
         session.refresh(pdf)

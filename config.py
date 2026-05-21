@@ -15,9 +15,9 @@ from cloudinary.utils import cloudinary_url
 load_dotenv()
 
 # Read credentials from environment, falling back to the previous defaults
-CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "drcqt1qdt")
-CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "954758517422793")
-CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "<your_api_secret>")
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
 # Paths
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))

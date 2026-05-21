@@ -129,7 +129,7 @@
     .placeholder p   { font-size: 1rem; }
     .placeholder small { font-size: .82rem; color: #374151; }
 
-    /* viewer de capítulos + PDF */
+   
     .obra-detalhe {
       display: flex;
       flex-direction: column;
@@ -191,7 +191,16 @@
     }
     .cap-titulo { font-size: .9rem; color: #d1d5db; }
 
-    /* iframe PDF */
+    /* PDF viewer */
+    .pdf-viewer {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .pdf-viewer.active {
+      display: flex;
+    }
     .pdf-frame {
       flex: 1;
       border: none;
@@ -208,26 +217,16 @@
     .pdf-barra span { font-size: .85rem; color: #9ca3af; flex: 1; }
     .pdf-barra a    { color: #a78bfa; font-size: .82rem; text-decoration: none; }
     .pdf-barra a:hover { text-decoration: underline; }
-
-    /* lista de pdfs disponíveis */
-    .pdf-cards { padding: .75rem 1.4rem; overflow-y: auto; }
-    .pdf-link-card {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      padding: .65rem .9rem;
-      border-radius: 8px;
-      border: 1px solid #2a2a3a;
-      margin-bottom: .4rem;
-      background: #16161f;
+    .pdf-barra button {
+      background: #2a2a3a;
+      border: none;
+      color: #e2e2e2;
+      padding: .3rem .7rem;
+      border-radius: 6px;
       cursor: pointer;
-      transition: border-color .15s, background .15s;
+      font-size: .8rem;
     }
-    .pdf-link-card:hover { border-color: #7c3aed; background: #1e1030; }
-    .pdf-link-card svg { width: 18px; height: 18px; color: #7c3aed; flex-shrink: 0; }
-    .pdf-link-card span { font-size: .85rem; color: #d1d5db; word-break: break-all; }
-
-    .sem-pdf { padding: 1.5rem; font-size: .85rem; color: #6b7280; }
+    .pdf-barra button:hover { background: #4c1d95; }
 
     /* scrollbar sutil */
     ::-webkit-scrollbar { width: 5px; }
@@ -284,7 +283,6 @@
       </div>
       <div class="abas-obra">
         <button class="aba-obra ativa" data-aba="capitulos">Capítulos</button>
-        <button class="aba-obra" data-aba="pdfs">PDFs</button>
       </div>
 
       <!-- Capítulos -->
@@ -292,16 +290,18 @@
         <div id="lista-caps"></div>
       </div>
 
-      <!-- PDFs -->
-      <div style="display:none; flex-direction:column; flex:1; overflow:hidden" id="aba-pdfs">
-        <div class="pdf-cards" id="lista-pdfs-obra"></div>
-        <div class="pdf-barra" id="pdf-barra" style="display:none">
+      <!-- PDF Viewer -->
+      <div class="pdf-viewer" id="pdf-viewer">
+        <div class="pdf-barra">
           <span id="pdf-nome">—</span>
           <a id="pdf-link-externo" href="#" target="_blank">Abrir em nova aba ↗</a>
+          <button id="fechar-pdf">✕ Fechar</button>
         </div>
-        <iframe class="pdf-frame" id="pdf-frame" style="display:none"></iframe>
+        <iframe class="pdf-frame" id="pdf-frame"></iframe>
       </div>
-    </div>
+
+      
+      
 
   </main>
 </div>
@@ -366,7 +366,7 @@ async function selecionarObra(card, obra) {
   // reset abas
   ativarAba("capitulos");
   await carregarCaps(obra.id);
-  await carregarPdfsObra(obra.id);
+
 }
 
 /* ── abas ── */
@@ -377,13 +377,11 @@ $$(".aba-obra").forEach(btn => {
 function ativarAba(nome) {
   $$(".aba-obra").forEach(b => b.classList.toggle("ativa", b.dataset.aba === nome));
   const caps = $("aba-capitulos");
-  const pdfs = $("aba-pdfs");
   if (nome === "capitulos") {
     caps.style.display = "block";
-    pdfs.style.display = "none";
   } else {
     caps.style.display = "none";
-    pdfs.style.display = "flex";
+
   }
 }
 
@@ -400,59 +398,50 @@ async function carregarCaps(obraId) {
       return;
     }
     lista.innerHTML = caps.map(c => `
-      <div class="cap-item">
+      <div class="cap-item" data-capitulo-id="${c.id}" data-numero="${c.numero}" data-titulo="${c.titulo}">
         <span class="cap-num">Cap. ${c.numero}</span>
         <span class="cap-titulo">${c.titulo}</span>
       </div>
     `).join("");
+
+    // Adicionar evento de clique nos capítulos
+    $$(".cap-item").forEach(item => {
+      item.addEventListener("click", () => abrirPdfCapitulo(item.dataset.capituloId, item.dataset.numero, item.dataset.titulo));
+    });
   } catch {
     lista.innerHTML = "<p style='color:#f87171;font-size:.85rem'>Erro ao carregar capítulos.</p>";
   }
 }
 
-/* ── PDFs da obra ── */
-async function carregarPdfsObra(obraId) {
-  const container = $("lista-pdfs-obra");
-  container.innerHTML = "";
-  $("pdf-barra").style.display = "none";
-  $("pdf-frame").style.display = "none";
-
+/* ── PDF do capítulo ── */
+async function abrirPdfCapitulo(capituloId, numero, titulo) {
   try {
-    const todos = await fetch("/api/pdf_urls").then(r => r.json());
-    const pdfs  = todos.filter(p => p.obra_id === obraId);
+    const todosPdfs = await fetch("/api/pdf_urls").then(r => r.json());
+    const pdf = todosPdfs.find(p => p.capitulo_id == capituloId);
 
-    if (!pdfs.length) {
-      container.innerHTML = "<p class='sem-pdf'>Nenhum PDF disponível para esta obra.</p>";
+    if (!pdf) {
+      alert("Nenhum PDF disponível para este capítulo.");
       return;
     }
-    pdfs.forEach((p, i) => {
-      const card = document.createElement("div");
-      card.className = "pdf-link-card";
-      card.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-        <span>PDF ${i + 1}</span>
-      `;
-      card.addEventListener("click", () => abrirPdf(p.url, `PDF ${i + 1}`));
-      container.appendChild(card);
-    });
+
+    $("pdf-nome").textContent = `Cap. ${numero} - ${titulo}`;
+    $("pdf-link-externo").href = pdf.url;
+    $("pdf-frame").src = pdf.url;
+
+    $("aba-capitulos").style.display = "none";
+    $("pdf-viewer").classList.add("active");
   } catch {
-    container.innerHTML = "<p class='sem-pdf' style='color:#f87171'>Erro ao carregar PDFs.</p>";
+    alert("Erro ao carregar PDF.");
   }
 }
 
-function abrirPdf(url, nome) {
-  $("pdf-nome").textContent       = nome;
-  $("pdf-link-externo").href      = url;
-  $("pdf-barra").style.display    = "flex";
-  $("pdf-frame").src              = url;
-  $("pdf-frame").style.display    = "block";
-  $("lista-pdfs-obra").style.display = "none";
-}
+/* ── fechar PDF ── */
+$("fechar-pdf").addEventListener("click", () => {
+  $("pdf-viewer").classList.remove("active");
+  $("aba-capitulos").style.display = "block";
+  $("pdf-frame").src = "";
+});
 
-/* ── init ── */
 carregarObras();
 </script>
 </body>

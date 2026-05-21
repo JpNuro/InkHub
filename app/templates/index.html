@@ -48,8 +48,7 @@
     .logo span { color: var(--purple); }
     .topo-sub { font-size: .9rem; color: var(--dim); font-weight: 400; }
     .topo-direita { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
-    .topo-usuario { font-size: .85rem; color: var(--muted); }
-    .topo-usuario strong { color: var(--purple-l); }
+
 
     .btn-link {
       font-size: .82rem;
@@ -339,47 +338,9 @@
 
 <!-- Abas -->
 <nav class="abas-nav">
-  <button class="aba-nav ativa" data-aba="usuarios">Usuários</button>
   <button class="aba-nav"       data-aba="obras">Obras</button>
   <button class="aba-nav"       data-aba="capitulos">Capítulos</button>
-  <button class="aba-nav"       data-aba="pdfs">PDFs (Cloudinary)</button>
 </nav>
-
-<!-- ══════════ ABA USUÁRIOS ══════════ -->
-<div class="aba-conteudo ativa" id="aba-usuarios">
-  <div class="dois-col">
-    <div class="col-form">
-      <h2>Novo usuário</h2>
-      <div class="campo">
-        <label>Nome *</label>
-        <input id="u-nome" type="text" placeholder="Nome completo" />
-      </div>
-      <div class="campo">
-        <label>E-mail</label>
-        <input id="u-email" type="email" placeholder="email@exemplo.com" />
-      </div>
-      <div class="campo">
-        <label>Senha</label>
-        <input id="u-senha" type="password" placeholder="Senha de acesso" />
-      </div>
-      <button class="btn-cadastrar" id="btn-usuario">Cadastrar usuário</button>
-      <div class="msg-form" id="msg-usuario"></div>
-    </div>
-    <div class="col-tabela">
-      <div class="tabela-header">
-        <h2>Usuários cadastrados</h2>
-        <button class="btn-reload" data-reload="usuarios">↺ Recarregar</button>
-      </div>
-      <div class="status-tabela" id="status-usuarios"></div>
-      <div class="tabela-wrap">
-        <table>
-          <thead><tr><th>#</th><th>Nome</th><th>E-mail</th></tr></thead>
-          <tbody id="tbody-usuarios"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════ ABA OBRAS ══════════ -->
 <div class="aba-conteudo" id="aba-obras">
@@ -446,31 +407,10 @@
       </div>
       <button class="btn-cadastrar" id="btn-capitulo">Cadastrar capítulo</button>
       <div class="msg-form" id="msg-capitulo"></div>
-    </div>
-    <div class="col-tabela">
-      <div class="tabela-header">
-        <h2>Capítulos cadastrados</h2>
-        <button class="btn-reload" data-reload="capitulos">↺ Recarregar</button>
-      </div>
-      <div class="status-tabela" id="status-capitulos"></div>
-      <div class="tabela-wrap">
-        <table>
-          <thead><tr><th>#</th><th>Número</th><th>Título</th><th>Obra</th></tr></thead>
-          <tbody id="tbody-capitulos"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ══════════ ABA PDFs CLOUDINARY ══════════ -->
-<div class="aba-conteudo" id="aba-pdfs">
-  <div class="upload-layout">
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
 
-    <!-- Formulário de upload -->
-    <div class="upload-form">
-      <h2>Enviar PDF para o Cloudinary</h2>
-
+      <h2>Enviar PDF</h2>
       <div class="drop-zone" id="drop-zone">
         <div class="drop-icon">📄</div>
         <p>Arraste o PDF aqui</p>
@@ -487,6 +427,13 @@
         </select>
       </div>
 
+      <div class="campo">
+        <label>Capítulo</label>
+        <select id="pdf-capitulo">
+          <option value="">— Selecione o capítulo (opcional) —</option>
+        </select>
+      </div>
+
       <div class="progress-bar-wrap" id="progress-wrap">
         <div class="progress-bar" id="progress-bar"></div>
       </div>
@@ -497,15 +444,27 @@
 
       <div class="msg-upload" id="msg-upload"></div>
     </div>
+    <div class="col-tabela">
+      <div class="tabela-header">
+        <h2>Capítulos cadastrados</h2>
+        <button class="btn-reload" data-reload="capitulos">↺ Recarregar</button>
+      </div>
+      <div class="status-tabela" id="status-capitulos"></div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Número</th><th>Título</th><th>Obra</th></tr></thead>
+          <tbody id="tbody-capitulos"></tbody>
+        </table>
+      </div>
 
-    <!-- Lista de PDFs enviados -->
-    <div class="pdfs-enviados">
-      <h2>
-        PDFs cadastrados
-        <button class="btn-reload" data-reload="pdfs" style="font-size:.8rem">↺</button>
-      </h2>
-      <div class="status-upload-lista" id="status-pdfs"></div>
-      <div id="lista-pdfs-admin"></div>
+      <div style="margin-top: 2rem;">
+        <div class="tabela-header">
+          <h2>PDFs cadastrados</h2>
+          <button class="btn-reload" data-reload="pdfs" style="font-size:.8rem">↺</button>
+        </div>
+        <div class="status-upload-lista" id="status-pdfs"></div>
+        <div id="lista-pdfs-admin"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -539,21 +498,7 @@ $$(".aba-nav").forEach(btn => {
 /* ══════════════════════════════════════════════
    Dados em memória
 ══════════════════════════════════════════════ */
-let usuarios = [], obras = [], capitulos = [], pdfs = [];
-
-async function carregarTodos() {
-  [usuarios, obras, capitulos, pdfs] = await Promise.all([
-    api("/api/usuarios"),
-    api("/api/minhas_obras"),
-    api("/api/meus_capitulos"),
-    api("/api/pdf_urls"),
-  ]);
-  renderUsuarios();
-  renderObras();
-  renderCapitulos();
-  renderPdfsAdmin();
-  popularSelects();
-}
+let obras = [], capitulos = [], pdfs = [];
 
 /* ══════════════════════════════════════════════
    Selects
@@ -582,19 +527,31 @@ function popularSelects() {
     selObraP.appendChild(opt);
   });
   selObraP.value = curObraP;
+  atualizarCapitulosPdf();
   atualizarBtnUpload();
+}
+
+function atualizarCapitulosPdf() {
+  const obraId = $("pdf-obra").value;
+  const selCap = $("pdf-capitulo");
+  const curCap = selCap.value;
+  selCap.innerHTML = '<option value="">— Selecione o capítulo (opcional) —</option>';
+
+  if (obraId) {
+    const capsObra = capitulos.filter(c => c.obra_id == obraId).sort((a, b) => a.numero - b.numero);
+    capsObra.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `Cap. ${c.numero} - ${c.titulo}`;
+      selCap.appendChild(opt);
+    });
+  }
+  selCap.value = curCap;
 }
 
 /* ══════════════════════════════════════════════
    Render tabelas
 ══════════════════════════════════════════════ */
-function renderUsuarios() {
-  const tb = $("tbody-usuarios");
-  $("status-usuarios").textContent = usuarios.length ? "" : "Nenhum usuário cadastrado.";
-  tb.innerHTML = usuarios.map(u => `
-    <tr><td>${u.id}</td><td>${u.nome}</td><td>${u.email || "—"}</td></tr>
-  `).join("");
-}
 
 function renderObras() {
   const tb = $("tbody-obras");
@@ -622,6 +579,7 @@ function renderCapitulos() {
 
 function renderPdfsAdmin() {
   const mapaObras = Object.fromEntries(obras.map(o => [o.id, o.titulo]));
+  const mapaCaps = Object.fromEntries(capitulos.map(c => [c.id, `Cap. ${c.numero} - ${c.titulo}`]));
   const lista = $("lista-pdfs-admin");
   $("status-pdfs").textContent = pdfs.length ? "" : "Nenhum PDF enviado ainda.";
   lista.innerHTML = pdfs.map(p => `
@@ -632,6 +590,7 @@ function renderPdfsAdmin() {
       </svg>
       <div class="pc-info">
         <div class="pc-obra">${mapaObras[p.obra_id] || "Obra #" + p.obra_id}</div>
+        ${p.capitulo_id ? `<div class="pc-url" style="font-size:.75rem;color:#a78bfa">${mapaCaps[p.capitulo_id] || "Capítulo #" + p.capitulo_id}</div>` : ''}
         <div class="pc-url">${p.url}</div>
       </div>
       <a href="${p.url}" target="_blank">Abrir ↗</a>
@@ -640,14 +599,16 @@ function renderPdfsAdmin() {
 }
 
 /* ══════════════════════════════════════════════
+
+
+
+
+/* ══════════════════════════════════════════════
    Recarregar individualmente
 ══════════════════════════════════════════════ */
 $$("[data-reload]").forEach(btn => {
   btn.addEventListener("click", async () => {
     switch (btn.dataset.reload) {
-      case "usuarios":
-        usuarios = await api("/api/usuarios");
-        renderUsuarios(); popularSelects(); break;
       case "obras":
         obras = await api("/api/minhas_obras");
         renderObras(); popularSelects(); break;
@@ -659,30 +620,6 @@ $$("[data-reload]").forEach(btn => {
         renderPdfsAdmin(); break;
     }
   });
-});
-
-/* ══════════════════════════════════════════════
-   Cadastrar usuário
-══════════════════════════════════════════════ */
-$("btn-usuario").addEventListener("click", async () => {
-  const dados = {
-    nome:  $("u-nome").value,
-    email: $("u-email").value,
-    senha: $("u-senha").value,
-  };
-  try {
-    const r = await fetch("/api/usuarios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados),
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.erro || "Erro");
-    setMsg("msg-usuario", "✓ Usuário cadastrado!", "ok");
-    $("u-nome").value = $("u-email").value = $("u-senha").value = "";
-    usuarios = await api("/api/usuarios");
-    renderUsuarios(); popularSelects();
-  } catch (e) { setMsg("msg-usuario", "✗ " + e.message, "err"); }
 });
 
 /* ══════════════════════════════════════════════
@@ -755,7 +692,10 @@ dropZone.addEventListener("drop", e => {
 inputPdf.addEventListener("change", () => {
   if (inputPdf.files[0]) definirArquivo(inputPdf.files[0]);
 });
-$("pdf-obra").addEventListener("change", atualizarBtnUpload);
+$("pdf-obra").addEventListener("change", () => {
+  atualizarCapitulosPdf();
+  atualizarBtnUpload();
+});
 
 function definirArquivo(f) {
   arquivoPdf = f;
@@ -796,6 +736,9 @@ $("btn-upload").addEventListener("click", async () => {
     const fd = new FormData();
     fd.append("arquivo", arquivoPdf);
     fd.append("obra_id", $("pdf-obra").value);
+    if ($("pdf-capitulo").value) {
+      fd.append("capitulo_id", $("pdf-capitulo").value);
+    }
 
     const r = await fetch("/api/upload_pdf", { method: "POST", body: fd });
     const d = await r.json();
@@ -830,6 +773,17 @@ $("btn-upload").addEventListener("click", async () => {
 /* ══════════════════════════════════════════════
    Init
 ══════════════════════════════════════════════ */
+async function carregarTodos() {
+  [obras, capitulos, pdfs] = await Promise.all([
+    api("/api/minhas_obras"),
+    api("/api/meus_capitulos"),
+    api("/api/pdf_urls"),
+  ]);
+  renderObras();
+  renderCapitulos();
+  renderPdfsAdmin();
+  popularSelects();
+}
 carregarTodos();
 </script>
 </body>

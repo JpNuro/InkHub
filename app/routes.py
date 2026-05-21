@@ -251,6 +251,7 @@ def upload_pdf():
 
     arquivo = fk.request.files.get("arquivo")
     obra_id = fk.request.form.get("obra_id")
+    capitulo_id = fk.request.form.get("capitulo_id")
 
     if not arquivo or arquivo.filename == "":
         return _erro("Nenhum arquivo enviado.")
@@ -278,7 +279,10 @@ def upload_pdf():
         return _erro(f"Falha no upload para o Cloudinary: {e}", 502)
 
     try:
-        registro = servicos.cadastrar_pdf_url({"url": url_pdf, "obra_id": obra_id_int})
+        dados_pdf = {"url": url_pdf, "obra_id": obra_id_int}
+        if capitulo_id:
+            dados_pdf["capitulo_id"] = int(capitulo_id)
+        registro = servicos.cadastrar_pdf_url(dados_pdf)
     except ValueError as e:
         return _erro(str(e))
 
