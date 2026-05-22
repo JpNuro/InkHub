@@ -268,7 +268,7 @@ def upload_pdf():
     try:
         resultado = cloudinary.uploader.upload(
             arquivo.stream,
-            resource_type="raw",
+            resource_type="image",
             folder="inkhub/pdfs",
             use_filename=True,
             unique_filename=True,
