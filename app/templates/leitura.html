@@ -294,10 +294,10 @@
       <div class="pdf-viewer" id="pdf-viewer">
         <div class="pdf-barra">
           <span id="pdf-nome">—</span>
-          <button id="pdf-link-externo">Abrir</button>
+          <button type="button" id="pdf-link-externo">Abrir</button>
           <button id="fechar-pdf">✕ Fechar</button>
         </div>
-        <iframe class="pdf-frame" id="pdf-frame"></iframe>
+        <iframe class="pdf-frame" id="pdf-frame" src="" title="Leitor de PDF" allow="fullscreen"></iframe>
       </div>
 
       
@@ -314,6 +314,7 @@ const $$ = sel => document.querySelectorAll(sel);
 /* ── estado ── */
 let obraAtual = null;
 let todosObraCards = [];
+let currentPdfUrl = null;
 
 /* ── carregar obras ── */
 async function carregarObras() {
@@ -417,7 +418,12 @@ async function carregarCaps(obraId) {
 async function abrirPdfCapitulo(capituloId, numero, titulo) {
   try {
     const todosPdfs = await fetch("/api/pdf_urls").then(r => r.json());
-    const pdf = todosPdfs.find(p => p.capitulo_id == capituloId);
+
+    // 1º tenta por capitulo_id; se não achar, usa qualquer PDF da obra atual
+    let pdf = todosPdfs.find(p => String(p.capitulo_id) === String(capituloId));
+    if (!pdf && obraAtual) {
+      pdf = todosPdfs.find(p => String(p.obra_id) === String(obraAtual.id));
+    }
 
     if (!pdf) {
       alert("Nenhum PDF disponível para este capítulo.");
@@ -425,8 +431,11 @@ async function abrirPdfCapitulo(capituloId, numero, titulo) {
     }
 
     $("pdf-nome").textContent = `Cap. ${numero} - ${titulo}`;
-    $("pdf-link-externo").href = pdf.url;
-    $("pdf-frame").src = pdf.url;
+    currentPdfUrl = pdf.url;
+
+    // Google Docs Viewer garante exibição mesmo sem CORS
+    const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdf.url)}&embedded=true`;
+    $("pdf-frame").src = viewerUrl;
 
     $("aba-capitulos").style.display = "none";
     $("pdf-viewer").classList.add("active");
@@ -440,6 +449,13 @@ $("fechar-pdf").addEventListener("click", () => {
   $("pdf-viewer").classList.remove("active");
   $("aba-capitulos").style.display = "block";
   $("pdf-frame").src = "";
+  currentPdfUrl = null;
+});
+
+$("pdf-link-externo").addEventListener("click", () => {
+  if (currentPdfUrl) {
+    window.open(currentPdfUrl, "_blank");
+  }
 });
 
 carregarObras();

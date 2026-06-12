@@ -92,68 +92,78 @@ Execute na raiz do projeto: python setup_database.py
 # if __name__ == "__main__":
 #     populate_database()
 
-from sqlalchemy import select
-
-from database import Base, SessionLocal, engine
-import models
 
 
-def populate_database():
-    print("Limpando e criando tabelas...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+####
+##      
+## Minha parte ⬇️
+##
+####
 
-    session = SessionLocal()
 
-    print("Tabelas criadas com sucesso!")
-    usuarios = [
-        models.Usuario(nome="Fujimoto", email="Fuji@gmail.com", senha="123"),
-        models.Usuario(nome="Masashi Kishimoto", email="Masamoto@gmail.com", senha="123"),
-    ]
-    session.add_all(usuarios)
-    session.flush()
-    session.commit()
-    print("Usuarios criados com sucesso!")
 
-    obras = [
-        models.Obra(titulo_obra="Vagabond", categoria="Seinen", autor_id=1),
-        models.Obra(titulo_obra="Bleach", categoria="Shonen", autor_id=2),
-        models.Obra(titulo_obra="Akira", categoria="Sci-fi", autor_id=1),
-        models.Obra(titulo_obra="Naruto", categoria="Shonen", autor_id=2),
-    ]
-    session.add_all(obras)
-    session.flush()
-    session.commit()
-    print("Obras criadas com sucesso!")
 
-    caps = [
-        models.Capitulo(numero_capitulo=1, obra_id=1, titulo_capitulo="Primeiro Capítulo de Vagabond"),
-        models.Capitulo(numero_capitulo=2, obra_id=1, titulo_capitulo="Segundo Capítulo de Vagabond"),
-        models.Capitulo(numero_capitulo=1, obra_id=2, titulo_capitulo="Primeiro Capítulo de Bleach"),
-        models.Capitulo(numero_capitulo=2, obra_id=2, titulo_capitulo="Segundo Capítulo de Bleach"),
-    ]
-    session.add_all(caps)
-    session.flush()
-    session.commit()
-    print("Capítulos criados com sucesso!")
+# from sqlalchemy import select
 
-    pdf_urls = [
-        models.PdfUrl(url="https://testejw267.com", obra_id=1),
+# from database import Base, SessionLocal, engine
+# import models
+
+
+# def populate_database():
+#     print("Limpando e criando tabelas...")
+#     Base.metadata.drop_all(bind=engine)
+#     Base.metadata.create_all(bind=engine)
+
+#     session = SessionLocal()
+
+#     print("Tabelas criadas com sucesso!")
+#     usuarios = [
+#         models.Usuario(nome="Fujimoto", email="Fuji@gmail.com", senha="123"),
+#         models.Usuario(nome="Masashi Kishimoto", email="Masamoto@gmail.com", senha="123"),
+#     ]
+#     session.add_all(usuarios)
+#     session.flush()
+#     session.commit()
+#     print("Usuarios criados com sucesso!")
+
+#     obras = [
+#         models.Obra(titulo_obra="Vagabond", categoria="Seinen", autor_id=1),
+#         models.Obra(titulo_obra="Bleach", categoria="Shonen", autor_id=2),
         
-    ]
-    session.add_all(pdf_urls)
-    session.flush()
-    session.commit()
-    print("PDF URLs criadas com sucesso!")
+#     ]
+#     session.add_all(obras)
+#     session.flush()
+#     session.commit()
+#     print("Obras criadas com sucesso!")
 
-    usu = len(session.scalars(select(models.Usuario)).all())
-    print(f"Total de usuarios: {usu}")
-    oba = len(session.scalars(select(models.Obra)).all())
-    print(f"Total de obras: {oba}")
-    cap = len(session.scalars(select(models.Capitulo)).all())
-    print(f"Total de capítulos: {cap}")
-    pdf = len(session.scalars(select(models.PdfUrl)).all())
-    print(f"Total de PDF URLs: {pdf}")
+#     caps = [
+#         models.Capitulo(numero_capitulo=1, obra_id=1, titulo_capitulo="Primeiro Capítulo de Vagabond"),
+#         models.Capitulo(numero_capitulo=2, obra_id=1, titulo_capitulo="Segundo Capítulo de Vagabond"),
+#         models.Capitulo(numero_capitulo=1, obra_id=2, titulo_capitulo="Primeiro Capítulo de Bleach"),
+#         models.Capitulo(numero_capitulo=2, obra_id=2, titulo_capitulo="Segundo Capítulo de Bleach"),
+#     ]
+#     session.add_all(caps)
+#     session.flush()
+#     session.commit()
+#     print("Capítulos criados com sucesso!")
 
-if __name__ == "__main__":
-    populate_database()
+#     pdf_urls = [
+#         models.PdfUrl(url="https://testejw267.com", obra_id=1),
+        
+#     ]
+#     session.add_all(pdf_urls)
+#     session.flush()
+#     session.commit()
+#     print("PDF URLs criadas com sucesso!")
+
+#     usu = len(session.scalars(select(models.Usuario)).all())
+#     print(f"Total de usuarios: {usu}")
+#     oba = len(session.scalars(select(models.Obra)).all())
+#     print(f"Total de obras: {oba}")
+#     cap = len(session.scalars(select(models.Capitulo)).all())
+#     print(f"Total de capítulos: {cap}")
+#     pdf = len(session.scalars(select(models.PdfUrl)).all())
+#     print(f"Total de PDF URLs: {pdf}")
+
+# if __name__ == "__main__":
+#     populate_database()
