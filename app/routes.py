@@ -195,7 +195,6 @@ def get_minhas_obras():
     usuario_id = fk.session.get("usuario_id")
     try:
         # filtra obras por autor_id
-        session = servicos.SessionLocal if hasattr(servicos, 'SessionLocal') else None
         obras = [o for o in servicos.listar_obras() if o.get('autor') and (o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'))]
         return fk.jsonify(obras)
     except Exception:

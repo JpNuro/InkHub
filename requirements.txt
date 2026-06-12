@@ -2,3 +2,6 @@ Flask>=3.0,<4
 SQLAlchemy>=2.0,<3
 cloudinary>=1.40,<2
 python-dotenv>=1.0,<2
+
+gunicorn>=20.1,<21    # production WSGI server (useful when deploying)
+flake8>=7.0,<8         # code style / linting
