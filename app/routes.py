@@ -10,7 +10,7 @@ import cloudinary.uploader
 import flask as fk
 from sqlalchemy.exc import IntegrityError
 
-import servicos
+import servico
 from werkzeug.security import check_password_hash, generate_password_hash
 from database import SessionLocal
 from models import Usuario
@@ -52,7 +52,7 @@ def login_post():
     email = (fk.request.form.get("email") or "").strip()
     senha = (fk.request.form.get("senha") or "").strip()
 
-    usuario = servicos.buscar_usuario_por_email(email)
+    usuario = servico.buscar_usuario_por_email(email)
 
     if usuario is None:
         return fk.render_template(
@@ -115,22 +115,22 @@ def painel():
 
 @api.get("/usuarios")
 def get_usuarios():
-    return fk.jsonify(servicos.listar_usuarios())
+    return fk.jsonify(servico.listar_usuarios())
 
 
 @api.get("/obras")
 def get_obras():
-    return fk.jsonify(servicos.listar_obras())
+    return fk.jsonify(servico.listar_obras())
 
 
 @api.get("/capitulos")
 def get_capitulos():
-    return fk.jsonify(servicos.listar_capitulos())
+    return fk.jsonify(servico.listar_capitulos())
 
 
 @api.get("/pdf_urls")
 def get_pdf_urls():
-    return fk.jsonify(servicos.listar_pdf_urls())
+    return fk.jsonify(servico.listar_pdf_urls())
 
 
 # ── API — Cadastro (protegido) ────────────────────────────────────────────────
@@ -149,7 +149,7 @@ def criar_usuario():
         return negado
     dados = fk.request.get_json(silent=True) or {}
     try:
-        return fk.jsonify(servicos.cadastrar_usuario(dados)), 201
+        return fk.jsonify(servico.cadastrar_usuario(dados)), 201
     except ValueError as e:
         return _erro(str(e))
     except IntegrityError:
@@ -165,7 +165,7 @@ def criar_obra():
     # garantir que a obra será registrada com o usuário autenticado
     dados["autor_id"] = fk.session.get("usuario_id")
     try:
-        return fk.jsonify(servicos.cadastrar_obra(dados)), 201
+        return fk.jsonify(servico.cadastrar_obra(dados)), 201
     except ValueError as e:
         return _erro(str(e))
 
@@ -179,7 +179,7 @@ def criar_capitulo():
     # passar o id do usuário autenticado para validação de propriedade
     dados["usuario_id"] = fk.session.get("usuario_id")
     try:
-        return fk.jsonify(servicos.cadastrar_capitulo(dados)), 201
+        return fk.jsonify(servico.cadastrar_capitulo(dados)), 201
     except ValueError as e:
         return _erro(str(e))
 
@@ -195,7 +195,7 @@ def get_minhas_obras():
     usuario_id = fk.session.get("usuario_id")
     try:
         # filtra obras por autor_id
-        obras = [o for o in servicos.listar_obras() if o.get('autor') and (o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'))]
+        obras = [o for o in servico.listar_obras() if o.get('autor') and (o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'))]
         return fk.jsonify(obras)
     except Exception:
         return fk.jsonify([])
@@ -209,10 +209,10 @@ def get_meus_capitulos():
     usuario_id = fk.session.get("usuario_id")
     try:
         minhas = []
-        for o in servicos.listar_obras():
+        for o in servico.listar_obras():
             if o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'):
                 minhas.append(o['id'])
-        capitulos = [c for c in servicos.listar_capitulos() if c.get('obra_id') in minhas]
+        capitulos = [c for c in servico.listar_capitulos() if c.get('obra_id') in minhas]
         return fk.jsonify(capitulos)
     except Exception:
         return fk.jsonify([])
@@ -229,7 +229,7 @@ def register_post():
     email = (fk.request.form.get("email") or "").strip()
     senha = (fk.request.form.get("senha") or "").strip()
     try:
-        usuario = servicos.cadastrar_usuario({"nome": nome, "email": email, "senha": senha})
+        usuario = servico.cadastrar_usuario({"nome": nome, "email": email, "senha": senha})
     except IntegrityError:
         return fk.render_template("login.html", erro="E-mail já cadastrado.", email_salvo=email), 409
     except ValueError as e:
@@ -281,7 +281,7 @@ def upload_pdf():
         dados_pdf = {"url": url_pdf, "obra_id": obra_id_int}
         if capitulo_id:
             dados_pdf["capitulo_id"] = int(capitulo_id)
-        registro = servicos.cadastrar_pdf_url(dados_pdf)
+        registro = servico.cadastrar_pdf_url(dados_pdf)
     except ValueError as e:
         return _erro(str(e))
 

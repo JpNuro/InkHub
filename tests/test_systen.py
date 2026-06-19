@@ -1,18 +1,22 @@
+import unittest
 from unittest.mock import MagicMock, patch
-import servicos
-from servicos import listar_obras
 
-def test_listar_obras():
-    obra_fake = MagicMock()
-    obra_fake.to_dict.return_value = {"id": 1, "titulo": "Obras "}
+import servico
+from servico import listar_obras
 
-    session_fake = MagicMock()
-    session_fake.scalars.return_value.all.return_value = [obra_fake]
 
-    with patch.object(servicos, "SessionLocal", return_value=session_fake):
-        resultado = listar_obras()  # sem argumentos!
+class TestServico(unittest.TestCase):
+    def test_listar_obras(self):
+        obra_fake = MagicMock()
+        obra_fake.to_dict.return_value = {"id": 1, "titulo": "Obras"}
 
-    assert resultado == [{"id": 1, "titulo": "Obras "}]
+        session_fake = MagicMock()
+        session_fake.scalars.return_value.all.return_value = [obra_fake]
+
+        with patch.object(servico, "SessionLocal", return_value=session_fake):
+            resultado = listar_obras()  # sem argumentos!
+
+        self.assertEqual(resultado, [{"id": 1, "titulo": "Obras"}])
 
 # def teste_listar_capitulos():
 #     capitulos = listar_capitulos()
