@@ -71,29 +71,12 @@
     }
     .btn-logout:hover { background: var(--purple-x); color: #fff; }
 
-    /* ── Abas principais ── */
-    .abas-nav {
-      display: flex;
-      gap: 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 1.5rem;
-    }
-    .aba-nav {
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--muted);
-      padding: .75rem 1.1rem;
-      font-size: .9rem;
-      cursor: pointer;
-      transition: color .15s, border-color .15s;
-    }
-    .aba-nav.ativa { color: var(--purple-l); border-bottom-color: var(--purple); }
+    /* ── Conteúdo das seções ── */
+    .secao-conteudo { display: none; flex: 1; }
+    .secao-conteudo.ativa { display: flex; }
 
-    /* ── Conteúdo das abas ── */
-    .aba-conteudo { display: none; flex: 1; }
-    .aba-conteudo.ativa { display: flex; }
+    .secao-obras { display: flex; }
+    .secao-capitulos { display: none; }
 
     /* ── Layout duas colunas (formulário + tabela) ── */
     .dois-col {
@@ -286,38 +269,6 @@
     .msg-upload.ok  { color: var(--ok); }
     .msg-upload.err { color: var(--err); }
 
-    /* lista de PDFs enviados */
-    .pdfs-enviados {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.5rem;
-    }
-    .pdfs-enviados h2 {
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .pdf-card-admin {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: .8rem 1rem;
-      margin-bottom: .5rem;
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-    }
-    .pdf-card-admin svg { width: 22px; height: 22px; color: var(--purple-l); flex-shrink: 0; }
-    .pdf-card-admin .pc-info { flex: 1; min-width: 0; }
-    .pdf-card-admin .pc-obra  { font-weight: 600; font-size: .88rem; }
-    .pdf-card-admin .pc-url   { font-size: .75rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pdf-card-admin a { color: var(--purple-l); font-size: .78rem; text-decoration: none; flex-shrink: 0; }
-    .pdf-card-admin a:hover { text-decoration: underline; }
-
-    .status-upload-lista { font-size: .85rem; color: var(--dim); padding: .25rem 0; }
-
     /* scrollbar */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -336,24 +287,15 @@
   </div>
 </header>
 
-<!-- Abas -->
-<nav class="abas-nav">
-  <button class="aba-nav"       data-aba="obras">Obras</button>
-  <button class="aba-nav"       data-aba="capitulos">Capítulos</button>
-</nav>
 
-<!-- ══════════ ABA OBRAS ══════════ -->
-<div class="aba-conteudo" id="aba-obras">
+<!-- ══════════ SEÇÃO OBRAS ══════════ -->
+<div class="secao-conteudo secao-obras" id="secao-obras">
   <div class="dois-col">
     <div class="col-form">
       <h2>Nova obra</h2>
       <div class="campo">
         <label>Título *</label>
         <input id="o-titulo" type="text" placeholder="Título da obra" />
-      </div>
-      <div class="campo">
-        <label>Autor</label>
-        <input type="text" value="{{ usuario_nome }}" readonly />
       </div>
       <div class="campo">
         <label>Categoria</label>
@@ -363,12 +305,9 @@
         <label>Ano</label>
         <input id="o-ano" type="number" placeholder="2024" />
       </div>
-      <div class="campo">
-        <label>Editora</label>
-        <input id="o-editora" type="text" placeholder="Nome da editora" />
-      </div>
       <button class="btn-cadastrar" id="btn-obra">Cadastrar obra</button>
       <div class="msg-form" id="msg-obra"></div>
+      <button class="btn-cadastrar" id="btn-ir-capitulos" style="display:none; background: var(--purple-d); margin-top: 1rem; padding: .85rem; font-size: 1rem;">Novo capítulo →</button>
     </div>
     <div class="col-tabela">
       <div class="tabela-header">
@@ -378,7 +317,7 @@
       <div class="status-tabela" id="status-obras"></div>
       <div class="tabela-wrap">
         <table>
-          <thead><tr><th>#</th><th>Título</th><th>Autor</th></tr></thead>
+          <thead><tr><th>#</th><th>Título</th></tr></thead>
           <tbody id="tbody-obras"></tbody>
         </table>
       </div>
@@ -386,10 +325,11 @@
   </div>
 </div>
 
-<!-- ══════════ ABA CAPÍTULOS ══════════ -->
-<div class="aba-conteudo" id="aba-capitulos">
+<!-- ══════════ SEÇÃO CAPÍTULOS ══════════ -->
+<div class="secao-conteudo secao-capitulos" id="secao-capitulos">
   <div class="dois-col">
     <div class="col-form">
+      <button class="btn-cadastrar" id="btn-voltar-obras" style="background: var(--purple-d); margin-bottom: 1rem;">← Voltar para obras</button>
       <h2>Novo capítulo</h2>
       <div class="campo">
         <label>Obra *</label>
@@ -398,14 +338,10 @@
         </select>
       </div>
       <div class="campo">
-        <label>Número</label>
-        <input id="c-numero" type="number" placeholder="1" />
-      </div>
-      <div class="campo">
         <label>Título *</label>
         <input id="c-titulo" type="text" placeholder="Título do capítulo" />
       </div>
-      <button class="btn-cadastrar" id="btn-capitulo">Cadastrar capítulo</button>
+      <button class="btn-cadastrar" id="btn-capitulo" disabled>Cadastrar capítulo</button>
       <div class="msg-form" id="msg-capitulo"></div>
 
       <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
@@ -452,18 +388,9 @@
       <div class="status-tabela" id="status-capitulos"></div>
       <div class="tabela-wrap">
         <table>
-          <thead><tr><th>#</th><th>Número</th><th>Título</th><th>Obra</th></tr></thead>
+          <thead><tr><th>Número</th><th>Título</th><th>Obra</th></tr></thead>
           <tbody id="tbody-capitulos"></tbody>
         </table>
-      </div>
-
-      <div style="margin-top: 2rem;">
-        <div class="tabela-header">
-          <h2>PDFs cadastrados</h2>
-          <button class="btn-reload" data-reload="pdfs" style="font-size:.8rem">↺</button>
-        </div>
-        <div class="status-upload-lista" id="status-pdfs"></div>
-        <div id="lista-pdfs-admin"></div>
       </div>
     </div>
   </div>
@@ -479,26 +406,32 @@ const api = path => fetch(path).then(r => r.json());
 
 function setMsg(elId, texto, tipo) {
   const el = $(elId);
+  if (!el) {
+    console.error("Elemento não encontrado:", elId);
+    return;
+  }
   el.textContent  = texto;
   el.className    = "msg-form " + (tipo === "ok" ? "msg-ok" : tipo === "err" ? "msg-err" : "");
+  el.style.display = "block";
 }
 
 /* ══════════════════════════════════════════════
-   Abas
+   Navegação entre seções
 ══════════════════════════════════════════════ */
-$$(".aba-nav").forEach(btn => {
-  btn.addEventListener("click", () => {
-    $$(".aba-nav").forEach(b => b.classList.remove("ativa"));
-    $$(".aba-conteudo").forEach(c => c.classList.remove("ativa"));
-    btn.classList.add("ativa");
-    $("aba-" + btn.dataset.aba).classList.add("ativa");
-  });
+$("btn-ir-capitulos").addEventListener("click", () => {
+  $("secao-obras").style.display = "none";
+  $("secao-capitulos").style.display = "flex";
+});
+
+$("btn-voltar-obras").addEventListener("click", () => {
+  $("secao-capitulos").style.display = "none";
+  $("secao-obras").style.display = "flex";
 });
 
 /* ══════════════════════════════════════════════
    Dados em memória
 ══════════════════════════════════════════════ */
-let obras = [], capitulos = [], pdfs = [];
+let obras = [], capitulos = [];
 
 /* ══════════════════════════════════════════════
    Selects
@@ -557,7 +490,7 @@ function renderObras() {
   const tb = $("tbody-obras");
   $("status-obras").textContent = obras.length ? "" : "Nenhuma obra cadastrada.";
   tb.innerHTML = obras.map(o => `
-    <tr><td>${o.id}</td><td>${o.titulo}</td><td>${o.autor || "—"}</td></tr>
+    <tr><td>${o.id}</td><td>${o.titulo}</td></tr>
   `).join("");
 }
 
@@ -569,33 +502,11 @@ function renderCapitulos() {
     .sort((a, b) => (a.obra_id - b.obra_id) || (a.numero || 0) - (b.numero || 0))
     .map(c => `
       <tr>
-        <td>${c.id}</td>
         <td>${c.numero ?? "—"}</td>
         <td>${c.titulo}</td>
         <td>${mapaObras[c.obra_id] || c.obra_id}</td>
       </tr>
     `).join("");
-}
-
-function renderPdfsAdmin() {
-  const mapaObras = Object.fromEntries(obras.map(o => [o.id, o.titulo]));
-  const mapaCaps = Object.fromEntries(capitulos.map(c => [c.id, `Cap. ${c.numero} - ${c.titulo}`]));
-  const lista = $("lista-pdfs-admin");
-  $("status-pdfs").textContent = pdfs.length ? "" : "Nenhum PDF enviado ainda.";
-  lista.innerHTML = pdfs.map(p => `
-    <div class="pdf-card-admin">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-      </svg>
-      <div class="pc-info">
-        <div class="pc-obra">${mapaObras[p.obra_id] || "Obra #" + p.obra_id}</div>
-        ${p.capitulo_id ? `<div class="pc-url" style="font-size:.75rem;color:#a78bfa">${mapaCaps[p.capitulo_id] || "Capítulo #" + p.capitulo_id}</div>` : ''}
-        <div class="pc-url">${p.url}</div>
-      </div>
-      <a href="${p.url}" target="_blank">Abrir ↗</a>
-    </div>
-  `).join("");
 }
 
 /* ══════════════════════════════════════════════
@@ -615,9 +526,6 @@ $$("[data-reload]").forEach(btn => {
       case "capitulos":
         capitulos = await api("/api/meus_capitulos");
         renderCapitulos(); break;
-      case "pdfs":
-        pdfs = await api("/api/pdf_urls");
-        renderPdfsAdmin(); break;
     }
   });
 });
@@ -626,11 +534,27 @@ $$("[data-reload]").forEach(btn => {
    Cadastrar obra
 ══════════════════════════════════════════════ */
 $("btn-obra").addEventListener("click", async () => {
+  const titulo = $("o-titulo").value.trim();
+  const categoria = $("o-categoria").value.trim();
+  const ano = $("o-ano").value.trim();
+
+  if (!titulo) {
+    setMsg("msg-obra", "✗ O campo Título é obrigatório.", "err");
+    return;
+  }
+  if (!categoria) {
+    setMsg("msg-obra", "✗ O campo Categoria é obrigatório.", "err");
+    return;
+  }
+  if (!ano) {
+    setMsg("msg-obra", "✗ O campo Ano é obrigatório.", "err");
+    return;
+  }
+
   const dados = {
-    titulo_obra: $("o-titulo").value,
-    categoria:   $("o-categoria").value,
-    ano:         $("o-ano").value,
-    editora:     $("o-editora").value,
+    titulo_obra: titulo,
+    categoria:   categoria,
+    ano:         ano,
   };
   try {
     const r = await fetch("/api/obras", {
@@ -641,9 +565,12 @@ $("btn-obra").addEventListener("click", async () => {
     const d = await r.json();
     if (!r.ok) throw new Error(d.erro || "Erro");
     setMsg("msg-obra", "✓ Obra cadastrada!", "ok");
-    $("o-titulo").value = $("o-categoria").value = $("o-ano").value = $("o-editora").value = "";
+    $("o-titulo").value = $("o-categoria").value = $("o-ano").value = "";
     obras = await api("/api/minhas_obras");
     renderObras(); popularSelects();
+    if (obras.length > 0) {
+      $("btn-ir-capitulos").style.display = "block";
+    }
   } catch (e) { setMsg("msg-obra", "✗ " + e.message, "err"); }
 });
 
@@ -651,10 +578,21 @@ $("btn-obra").addEventListener("click", async () => {
    Cadastrar capítulo
 ══════════════════════════════════════════════ */
 $("btn-capitulo").addEventListener("click", async () => {
+  const obra = $("c-obra").value;
+  const titulo = $("c-titulo").value.trim();
+
+  if (!obra) {
+    setMsg("msg-capitulo", "✗ O campo Obra é obrigatório.", "err");
+    return;
+  }
+  if (!titulo) {
+    setMsg("msg-capitulo", "✗ O campo Título é obrigatório.", "err");
+    return;
+  }
+
   const dados = {
-    titulo_capitulo: $("c-titulo").value,
-    numero_capitulo: $("c-numero").value,
-    obra_id:         $("c-obra").value,
+    titulo_capitulo: titulo,
+    obra_id:         obra,
   };
   try {
     const r = await fetch("/api/capitulos", {
@@ -665,7 +603,7 @@ $("btn-capitulo").addEventListener("click", async () => {
     const d = await r.json();
     if (!r.ok) throw new Error(d.erro || "Erro");
     setMsg("msg-capitulo", "✓ Capítulo cadastrado!", "ok");
-    $("c-titulo").value = $("c-numero").value = "";
+    $("c-titulo").value = "";
     capitulos = await api("/api/meus_capitulos");
     renderCapitulos();
   } catch (e) { setMsg("msg-capitulo", "✗ " + e.message, "err"); }
@@ -703,6 +641,7 @@ function definirArquivo(f) {
   nomeEl.textContent = "📎 " + f.name;
   nomeEl.style.display = "block";
   atualizarBtnUpload();
+  $("btn-capitulo").disabled = false;
   mostrarMsgUpload("", "");
 }
 
@@ -757,10 +696,7 @@ $("btn-upload").addEventListener("click", async () => {
     $("nome-arquivo").textContent   = "";
     inputPdf.value = "";
     atualizarBtnUpload();
-
-    // recarregar lista
-    pdfs = await api("/api/pdf_urls");
-    renderPdfsAdmin();
+    $("btn-capitulo").disabled = true;
 
   } catch (e) {
     clearInterval(tick);
@@ -774,15 +710,16 @@ $("btn-upload").addEventListener("click", async () => {
    Init
 ══════════════════════════════════════════════ */
 async function carregarTodos() {
-  [obras, capitulos, pdfs] = await Promise.all([
+  [obras, capitulos] = await Promise.all([
     api("/api/minhas_obras"),
     api("/api/meus_capitulos"),
-    api("/api/pdf_urls"),
   ]);
   renderObras();
   renderCapitulos();
-  renderPdfsAdmin();
   popularSelects();
+  if (obras.length > 0) {
+    $("btn-ir-capitulos").style.display = "block";
+  }
 }
 carregarTodos();
 </script>

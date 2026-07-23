@@ -135,6 +135,39 @@
       text-decoration: none;
     }
     .voltar:hover { color: #a78bfa; }
+
+    .btn-cadastrar {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #7c3aed;
+      border-radius: 8px;
+      color: #7c3aed;
+      font-size: .9rem;
+      font-weight: 600;
+      padding: .65rem;
+      cursor: pointer;
+      margin-top: .8rem;
+      transition: background .15s, color .15s;
+    }
+    .btn-cadastrar:hover { background: rgba(124,58,237,.1); color: #a78bfa; }
+
+    .form-cadastro {
+      display: none;
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid #2a2a3a;
+    }
+    .form-cadastro.visible { display: block; }
+
+    .form-login {
+      display: block;
+    }
+    .form-login.hidden { display: none; }
+
+    .btn-cadastrar-wrapper {
+      display: block;
+    }
+    .btn-cadastrar-wrapper.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -155,7 +188,7 @@
   </div>
   {% endif %}
 
-  <form method="POST" action="/login">
+  <form method="POST" action="/login" class="form-login" id="form-login">
     <div class="campo">
       <label for="email">E-mail</label>
       <input id="email" name="email" type="email" placeholder="seu@email.com"
@@ -180,23 +213,28 @@
     <button class="btn-entrar" type="submit">Entrar</button>
   </form>
 
-  <hr style="margin:1.2rem 0; border-color:#222;">
+  <div class="btn-cadastrar-wrapper" id="btn-cadastrar-wrapper">
+    <button class="btn-cadastrar" type="button" onclick="toggleCadastro()">Cadastrar</button>
+  </div>
 
-  <form method="POST" action="/register">
-    <div class="campo">
-      <label for="nome">Nome</label>
-      <input id="nome" name="nome" type="text" placeholder="Seu nome completo" autocomplete="name" required />
-    </div>
-    <div class="campo">
-      <label for="email_reg">E-mail</label>
-      <input id="email_reg" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required />
-    </div>
-    <div class="campo">
-      <label for="senha_reg">Senha</label>
-      <input id="senha_reg" name="senha" type="password" placeholder="Senha de acesso" autocomplete="new-password" required />
-    </div>
-    <button class="btn-entrar" type="submit">Cadastrar</button>
-  </form>
+  <div class="form-cadastro" id="form-cadastro">
+    <form method="POST" action="/register">
+      <div class="campo">
+        <label for="nome">Nome</label>
+        <input id="nome" name="nome" type="text" placeholder="Seu nome completo" autocomplete="name" required />
+      </div>
+      <div class="campo">
+        <label for="email_reg">E-mail</label>
+        <input id="email_reg" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required />
+      </div>
+      <div class="campo">
+        <label for="senha_reg">Senha</label>
+        <input id="senha_reg" name="senha" type="password" placeholder="Senha de acesso" autocomplete="new-password" required />
+      </div>
+      <button class="btn-entrar" type="submit">Cadastrar</button>
+      <button class="btn-cadastrar" type="button" onclick="toggleCadastro()" style="margin-top: .5rem;">Voltar para login</button>
+    </form>
+  </div>
 
   <a class="voltar" href="/">← Voltar para o catálogo</a>
 </div>
@@ -216,6 +254,16 @@ function toggleSenha() {
     olhoAberto.style.display = 'none';
     olhoFechado.style.display = 'block';
   }
+}
+
+function toggleCadastro() {
+  const formCadastro = document.getElementById('form-cadastro');
+  const formLogin = document.getElementById('form-login');
+  const btnCadastrarWrapper = document.getElementById('btn-cadastrar-wrapper');
+  
+  formCadastro.classList.toggle('visible');
+  formLogin.classList.toggle('hidden');
+  btnCadastrarWrapper.classList.toggle('hidden');
 }
 </script>
 

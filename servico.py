@@ -141,7 +141,6 @@ def cadastrar_obra(dados):
 
 def cadastrar_capitulo(dados):
     titulo_capitulo = _texto_obrigatorio(dados.get("titulo_capitulo"), "titulo_capitulo")
-    numero_capitulo = _texto_obrigatorio(dados.get("numero_capitulo"), "numero_capitulo")
     obra_id         = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
 
     # Opcional: validar se o usuário que está criando o capítulo é dono da obra
@@ -160,6 +159,14 @@ def cadastrar_capitulo(dados):
                 raise ValueError("'usuario_id' inválido")
             if obra.autor_id != uid:
                 raise ValueError("Você não tem permissão para adicionar capítulos a esta obra.")
+
+        # Auto incremento do número do capítulo
+        ultimo_numero = session.scalar(
+            select(Capitulo.numero_capitulo)
+            .where(Capitulo.obra_id == obra.id)
+            .order_by(Capitulo.numero_capitulo.desc())
+        )
+        numero_capitulo = (ultimo_numero or 0) + 1
 
         capitulo = Capitulo(
             titulo_capitulo=titulo_capitulo,
