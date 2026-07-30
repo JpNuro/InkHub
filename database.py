@@ -1,3 +1,8 @@
+"""
+Configuração do banco de dados SQLite usando SQLAlchemy.
+Define a base declarativa e a fábrica de sessões.
+"""
+
 import os
 
 from sqlalchemy import create_engine
@@ -5,14 +10,18 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from config import INSTANCE_DIR
 
-os.makedirs(INSTANCE_DIR, exist_ok=True)
+# ── Configuração do Banco de Dados ───────────────────────────────────────────────
+# Cria o engine do SQLite (arquivo local)
+engine = create_engine("sqlite:///inkhub.db", echo=False)
 
-_db_path = os.path.join(INSTANCE_DIR, "app.db").replace("\\", "/")
-DATABASE_URL = f"sqlite:///{_db_path}"
+# Cria a fábrica de sessões para gerenciar conexões com o banco
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Base declarativa para os modelos ORM
 Base = declarative_base()
+
+
+# ── Função para criar as tabelas ─────────────────────────────────────────────────
+def criar_tabelas():
+  """Cria todas as tabelas no banco de dados se não existirem."""
+  Base.metadata.create_all(bind=engine)

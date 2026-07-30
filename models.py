@@ -1,140 +1,121 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+"""
+Modelos de banco de dados usando SQLAlchemy ORM.
+Cada classe representa uma tabela no banco SQLite.
+"""
+
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from database import Base
 
 
-
-class Obra(Base):
-    __tablename__ = "obras"
-
-    id = Column(Integer, primary_key=True)
-    titulo_obra = Column(String(200), nullable=False)
-    autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    categoria = Column(String(120), nullable=True)
-    ano = Column(Integer, nullable=True)
-    editora = Column(String(120), nullable=True)
-    
-    capitulos = relationship("Capitulo", back_populates="obra")
-    autor = relationship("Usuario", back_populates="obras")
-    pdf_urls = relationship("PdfUrl", back_populates="obra")
-
-    def to_dict(self):
-        autor_nome = self.autor.nome if self.autor else None
-        return {"id": self.id, "titulo": self.titulo_obra, "autor": autor_nome, "autor_id": self.autor_id}
-
-    def __repr__(self):
-        return f"<Obra {self.id} {self.titulo_obra!r}>"
-
-
-class Capitulo(Base):
-    __tablename__ = "capitulos"
-    id = Column(Integer, primary_key=True)
-    titulo_capitulo = Column(String(200), nullable=False)
-    numero_capitulo = Column(Integer, nullable=True)
-    obra_id = Column(Integer, ForeignKey("obras.id"), nullable=False)
-
-    obra = relationship("Obra", back_populates="capitulos")
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "titulo": self.titulo_capitulo,
-            "numero": self.numero_capitulo,
-            "obra_id": self.obra_id,
-        }
-
-    def __repr__(self): # Changed to use titulo_capitulo for consistency
-        return f"<Capitulo {self.id} {self.titulo_capitulo!r}>"
-
+# ── Modelo de Usuário ───────────────────────────────────────────────────────────
 class Usuario(Base):
-    __tablename__ = "usuarios"
+  """Tabela de usuários do sistema."""
+  __tablename__ = "usuarios"
 
-    id = Column(Integer, primary_key=True)
-    nome = Column(String(120), nullable=False)
-    email = Column(String(120), unique=True, nullable=True)
-    senha = Column(String(120), nullable=True)
-    obras = relationship("Obra", back_populates="autor")
+  id = Column(Integer, primary_key=True)           # ID único do usuário
+  nome = Column(String(200), nullable=False)       # Nome completo do usuário
+  email = Column(String(200), nullable=False)      # E-mail único do usuário
+  senha = Column(String(200), nullable=True)       # Senha hasheada (pode ser None para compatibilidade)
 
-    def to_dict(self):
-        return {"id": self.id, "nome": self.nome, "email": self.email}
+  obras = relationship("Obra", back_populates="autor")
 
-    def __repr__(self):
-        return f"<Usuario {self.id} {self.nome!r}>"
+  def to_dict(self):
+    """Converte o objeto para dicionário para serialização JSON."""
+    return {
+      "id": self.id,
+      "nome": self.nome,
+      "email": self.email,
+    }
+
+  def __repr__(self):
+    return f"<Usuario {self.id} {self.nome!r}>"
 
 
+# ── Modelo de Obra ─────────────────────────────────────────────────────────────
+class Obra(Base):
+  """Tabela de obras (mangás, quadrinhos, etc)."""
+  __tablename__ = "obras"
+
+  id = Column(Integer, primary_key=True)           # ID único da obra
+  titulo_obra = Column(String(200), nullable=False)  # Título da obra
+  autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)  # ID do autor (usuário)
+  categoria = Column(String(100), nullable=True)   # Categoria (Shonen, Seinen, etc)
+  ano = Column(Integer, nullable=True)              # Ano de lançamento
+  editora = Column(String(200), nullable=True)     # Editora da obra
+
+  # Relacionamento com capítulos (uma obra tem muitos capítulos)
+  capitulos = relationship("Capitulo", back_populates="obra")
+  # Relacionamento com usuário autor (uma obra pertence a um usuário)
+  autor = relationship("Usuario", back_populates="obras")
+  pdf_urls = relationship("PdfUrl", back_populates="obra")
+
+  def to_dict(self):
+    """Converte o objeto para dicionário para serialização JSON."""
+    return {
+      "id": self.id,
+      "titulo": self.titulo_obra,
+      "autor_id": self.autor_id,
+      "autor": self.autor.nome if self.autor else None,
+      "categoria": self.categoria,
+      "ano": self.ano,
+      "editora": self.editora,
+    }
+
+  def __repr__(self):
+    return f"<Obra {self.id} {self.titulo_obra!r}>"
+
+
+# ── Modelo de Capítulo ─────────────────────────────────────────────────────────
+class Capitulo(Base):
+  """Tabela de capítulos das obras."""
+  __tablename__ = "capitulos"
+
+  id = Column(Integer, primary_key=True)           # ID único do capítulo
+  titulo_capitulo = Column(String(200), nullable=False)  # Título do capítulo
+  numero_capitulo = Column(Integer, nullable=True)  # Número do capítulo (auto-incrementado)
+  obra_id = Column(Integer, ForeignKey("obras.id"), nullable=False)  # ID da obra
+
+  # Relacionamento com obra (um capítulo pertence a uma obra)
+  obra = relationship("Obra", back_populates="capitulos")
+  pdf_urls = relationship("PdfUrl", back_populates="capitulo")
+
+  def to_dict(self):
+    """Converte o objeto para dicionário para serialização JSON."""
+    return {
+      "id": self.id,
+      "titulo": self.titulo_capitulo,
+      "numero": self.numero_capitulo,
+      "obra_id": self.obra_id,
+    }
+
+  def __repr__(self):
+    return f"<Capitulo {self.id} {self.titulo_capitulo!r}>"
+
+
+# ── Modelo de PDF URL ─────────────────────────────────────────────────────────
 class PdfUrl(Base):
-    __tablename__ = "pdf_urls"
+  """Tabela de URLs de PDFs armazenados no Cloudinary."""
+  __tablename__ = "pdf_urls"
 
-    id = Column(Integer, primary_key=True)
-    url = Column(String(200), nullable=False)
-    obra_id = Column(Integer, ForeignKey("obras.id"), nullable=False)
-    capitulo_id = Column(Integer, ForeignKey("capitulos.id"), nullable=True)
+  id = Column(Integer, primary_key=True)           # ID único do registro
+  url = Column(String(500), nullable=False)        # URL pública do PDF no Cloudinary
+  obra_id = Column(Integer, ForeignKey("obras.id"), nullable=False)  # ID da obra
+  capitulo_id = Column(Integer, ForeignKey("capitulos.id"), nullable=True)  # ID do capítulo (opcional)
 
-    obra = relationship("Obra", back_populates="pdf_urls")
-    capitulo = relationship("Capitulo")
+  # Relacionamentos
+  obra = relationship("Obra", back_populates="pdf_urls")
+  capitulo = relationship("Capitulo", back_populates="pdf_urls")
 
-    def to_dict(self):
-        return {"id": self.id, "url": self.url, "obra_id": self.obra_id, "capitulo_id": self.capitulo_id}
+  def to_dict(self):
+    """Converte o objeto para dicionário para serialização JSON."""
+    return {
+      "id": self.id,
+      "url": self.url,
+      "obra_id": self.obra_id,
+      "capitulo_id": self.capitulo_id,
+    }
 
-    def __repr__(self):
-        return f"<pdf_url {self.id} {self.url!r}>"
-
-# class Professor(Base):
-#     __tablename__ = "professores"
-
-#     id = Column(Integer, primary_key=True)
-#     nome = Column(String(120), nullable=False)
-#     email = Column(String(120), unique=True, nullable=True)
-
-#     turmas = relationship("Turma", back_populates="professor")
-
-#     def to_dict(self):
-#         return {"id": self.id, "nome": self.nome, "email": self.email}
-
-#     def __repr__(self):
-#         return f"<Professor {self.id} {self.nome!r}>"
-
-# class Turma(Base):
-#     __tablename__ = "turmas"
-
-#     id = Column(Integer, primary_key=True)
-#     nome = Column(String(120), nullable=False)
-#     codigo = Column(String(40), unique=True, nullable=False)
-#     professor_id = Column(Integer, ForeignKey("professores.id"), nullable=False)
-
-#     professor = relationship("Professor", back_populates="turmas")
-#     alunos = relationship("Aluno", back_populates="turma")
-
-#     def to_dict(self):
-#         return {
-#             "id": self.id,
-#             "nome": self.nome,
-#             "codigo": self.codigo,
-#             "professor_id": self.professor_id,
-#         }
-
-#     def __repr__(self):
-#         return f"<Turma {self.id} {self.codigo!r}>"
-
-
-# class Aluno(Base):
-#     __tablename__ = "alunos"
-
-#     id = Column(Integer, primary_key=True)
-#     nome = Column(String(120), nullable=False)
-#     email = Column(String(120), unique=True, nullable=True)
-#     turma_id = Column(Integer, ForeignKey("turmas.id"), nullable=False)
-
-#     turma = relationship("Turma", back_populates="alunos")
-
-#     def to_dict(self):
-#         return {
-#             "id": self.id,
-#             "nome": self.nome,
-#             "email": self.email,
-#             "turma_id": self.turma_id,
-#         }
-
-#     def __repr__(self):
-#         return f"<Aluno {self.id} {self.nome!r}>"
+  def __repr__(self):
+    return f"<PdfUrl {self.id} obra={self.obra_id}>"

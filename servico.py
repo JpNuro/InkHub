@@ -11,211 +11,221 @@ from werkzeug.security import generate_password_hash
 
 
 # ── Listagens ─────────────────────────────────────────────────────────────────
+# Funções para listar dados do banco de dados
 
 def listar_obras():
-    session = SessionLocal()
-    try:
-        linhas = session.scalars(select(Obra).order_by(Obra.titulo_obra)).all()
-        return [o.to_dict() for o in linhas]
-    finally:
-        session.close()
+  """Lista todas as obras do banco ordenadas por título."""
+  session = SessionLocal()
+  try:
+    linhas = session.scalars(select(Obra).order_by(Obra.titulo_obra)).all()
+    return [o.to_dict() for o in linhas]
+  finally:
+    session.close()
 
 
 def listar_capitulos():
-    session = SessionLocal()
-    try:
-        linhas = session.scalars(select(Capitulo).order_by(Capitulo.numero_capitulo)).all()
-        return [c.to_dict() for c in linhas]
-    finally:
-        session.close()
+  """Lista todos os capítulos do banco ordenados por número."""
+  session = SessionLocal()
+  try:
+    linhas = session.scalars(select(Capitulo).order_by(Capitulo.numero_capitulo)).all()
+    return [c.to_dict() for c in linhas]
+  finally:
+    session.close()
 
 
 def listar_usuarios():
-    session = SessionLocal()
-    try:
-        linhas = session.scalars(select(Usuario).order_by(Usuario.nome)).all()
-        return [u.to_dict() for u in linhas]
-    finally:
-        session.close()
+  """Lista todos os usuários do banco ordenados por nome."""
+  session = SessionLocal()
+  try:
+    linhas = session.scalars(select(Usuario).order_by(Usuario.nome)).all()
+    return [u.to_dict() for u in linhas]
+  finally:
+    session.close()
 
 
 def listar_pdf_urls():
-    session = SessionLocal()
-    try:
-        linhas = session.scalars(select(PdfUrl).order_by(PdfUrl.id)).all()
-        return [p.to_dict() for p in linhas]
-    finally:
-        session.close()
+  """Lista todas as URLs de PDF do banco ordenadas por ID."""
+  session = SessionLocal()
+  try:
+    linhas = session.scalars(select(PdfUrl).order_by(PdfUrl.id)).all()
+    return [p.to_dict() for p in linhas]
+  finally:
+    session.close()
 
 
 def buscar_usuario_por_email(email: str):
-    """
-    Retorna dict com id, nome, email e senha do usuário, ou None se não achar.
-    Usado exclusivamente pelo login — inclui a senha para comparação.
-    """
-    session = SessionLocal()
-    try:
-        usuario = session.scalar(
-            select(Usuario).where(Usuario.email == email)
-        )
-        if usuario is None:
-            return None
-        return {
-            "id":    usuario.id,
-            "nome":  usuario.nome,
-            "email": usuario.email,
-            "senha": usuario.senha,   # comparado na rota de login
-        }
-    finally:
-        session.close()
+  """
+  Retorna dict com id, nome, email e senha do usuário, ou None se não achar.
+  Usado exclusivamente pelo login — inclui a senha para comparação.
+  """
+  session = SessionLocal()
+  try:
+    usuario = session.scalar(
+      select(Usuario).where(Usuario.email == email)
+    )
+    if usuario is None:
+      return None
+    return {
+      "id":    usuario.id,
+      "nome":  usuario.nome,
+      "email": usuario.email,
+      "senha": usuario.senha,   # comparado na rota de login
+    }
+  finally:
+    session.close()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-
+# Funções auxiliares para validação
 
 def _texto_obrigatorio(valor, campo):
-    if valor is None or str(valor).strip() == "":
-        raise ValueError(f"O campo '{campo}' é obrigatório.")
-    return str(valor).strip()
+  """Valida se um campo de texto obrigatório foi preenchido."""
+  if valor is None or str(valor).strip() == "":
+    raise ValueError(f"O campo '{campo}' é obrigatório.")
+  return str(valor).strip()
 
 
 def _texto_opcional(valor):
-    if valor is None:
-        return None
-    texto = str(valor).strip()
-    return texto or None
+  """Retorna o valor de texto ou None se vazio."""
+  if valor is None:
+    return None
+  texto = str(valor).strip()
+  return texto or None
 
 
 # ── Cadastros ─────────────────────────────────────────────────────────────────
-
+# Funções para criar novos registros no banco de dados
 
 def cadastrar_usuario(dados):
-    nome  = _texto_obrigatorio(dados.get("nome"), "nome")
-    email = _texto_opcional(dados.get("email"))
-    senha = _texto_opcional(dados.get("senha"))
+  """Cadastra um novo usuário no banco com senha hasheada."""
+  nome  = _texto_obrigatorio(dados.get("nome"), "nome")
+  email = _texto_opcional(dados.get("email"))
+  senha = _texto_opcional(dados.get("senha"))
 
-    session = SessionLocal()
-    try:
-        usuario = Usuario(nome=nome, email=email, senha=(generate_password_hash(senha) if senha else None))
-        session.add(usuario)
-        session.commit()
-        session.refresh(usuario)
-        return usuario.to_dict()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+  session = SessionLocal()
+  try:
+    usuario = Usuario(nome=nome, email=email, senha=(generate_password_hash(senha) if senha else None))
+    session.add(usuario)
+    session.commit()
+    session.refresh(usuario)
+    return usuario.to_dict()
+  except Exception:
+    session.rollback()
+    raise
+  finally:
+    session.close()
 
 
 def cadastrar_obra(dados):
-    titulo_obra = _texto_obrigatorio(dados.get("titulo_obra"), "titulo_obra")
-    autor_id    = _texto_obrigatorio(dados.get("autor_id"), "autor_id")
-    categoria   = _texto_opcional(dados.get("categoria")) or None
-    ano         = _texto_opcional(dados.get("ano")) or None
-    editora     = _texto_opcional(dados.get("editora")) or None
+  """Cadastra uma nova obra no banco vinculada ao autor."""
+  titulo_obra = _texto_obrigatorio(dados.get("titulo_obra"), "titulo_obra")
+  autor_id    = _texto_obrigatorio(dados.get("autor_id"), "autor_id")
+  categoria   = _texto_opcional(dados.get("categoria")) or None
+  ano         = _texto_opcional(dados.get("ano")) or None
+  editora     = _texto_opcional(dados.get("editora")) or None
 
-    session = SessionLocal()
-    try:
-        autor = session.get(Usuario, int(autor_id))
-        if autor is None:
-            raise ValueError(f"Autor {autor_id} não encontrado.")
+  session = SessionLocal()
+  try:
+    autor = session.get(Usuario, int(autor_id))
+    if autor is None:
+      raise ValueError(f"Autor {autor_id} não encontrado.")
 
-        obra = Obra(
-            titulo_obra=titulo_obra,
-            autor_id=autor.id,
-            categoria=categoria,
-            ano=int(ano) if ano else None,
-            editora=editora,
-        )
-        session.add(obra)
-        session.commit()
-        session.refresh(obra)
-        return obra.to_dict()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    obra = Obra(
+      titulo_obra=titulo_obra,
+      autor_id=autor.id,
+      categoria=categoria,
+      ano=int(ano) if ano else None,
+      editora=editora,
+    )
+    session.add(obra)
+    session.commit()
+    session.refresh(obra)
+    return obra.to_dict()
+  except Exception:
+    session.rollback()
+    raise
+  finally:
+    session.close()
 
 
 def cadastrar_capitulo(dados):
-    titulo_capitulo = _texto_obrigatorio(dados.get("titulo_capitulo"), "titulo_capitulo")
-    obra_id         = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
+  """Cadastra um novo capítulo no banco com número auto-incrementado."""
+  titulo_capitulo = _texto_obrigatorio(dados.get("titulo_capitulo"), "titulo_capitulo")
+  obra_id         = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
 
-    # Opcional: validar se o usuário que está criando o capítulo é dono da obra
-    usuario_id = dados.get("usuario_id")
+  # Opcional: validar se o usuário que está criando o capítulo é dono da obra
+  usuario_id = dados.get("usuario_id")
 
-    session = SessionLocal()
-    try:
-        obra = session.get(Obra, int(obra_id))
-        if obra is None:
-            raise ValueError(f"Obra {obra_id} não encontrada.")
+  session = SessionLocal()
+  try:
+    obra = session.get(Obra, int(obra_id))
+    if obra is None:
+      raise ValueError(f"Obra {obra_id} não encontrada.")
 
-        if usuario_id is not None:
-            try:
-                uid = int(usuario_id)
-            except ValueError:
-                raise ValueError("'usuario_id' inválido")
-            if obra.autor_id != uid:
-                raise ValueError("Você não tem permissão para adicionar capítulos a esta obra.")
+    if usuario_id is not None:
+      try:
+        uid = int(usuario_id)
+      except ValueError:
+        raise ValueError("'usuario_id' inválido")
+      if obra.autor_id != uid:
+        raise ValueError("Você não tem permissão para adicionar capítulos a esta obra.")
 
-        # Auto incremento do número do capítulo
-        ultimo_numero = session.scalar(
-            select(Capitulo.numero_capitulo)
-            .where(Capitulo.obra_id == obra.id)
-            .order_by(Capitulo.numero_capitulo.desc())
-        )
-        numero_capitulo = (ultimo_numero or 0) + 1
+    # Auto incremento do número do capítulo
+    ultimo_numero = session.scalar(
+      select(Capitulo.numero_capitulo)
+      .where(Capitulo.obra_id == obra.id)
+      .order_by(Capitulo.numero_capitulo.desc())
+    )
+    numero_capitulo = (ultimo_numero or 0) + 1
 
-        capitulo = Capitulo(
-            titulo_capitulo=titulo_capitulo,
-            numero_capitulo=numero_capitulo,
-            obra_id=obra.id,
-        )
-        session.add(capitulo)
-        session.commit()
-        session.refresh(capitulo)
-        return capitulo.to_dict()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    capitulo = Capitulo(
+      titulo_capitulo=titulo_capitulo,
+      numero_capitulo=numero_capitulo,
+      obra_id=obra.id,
+    )
+    session.add(capitulo)
+    session.commit()
+    session.refresh(capitulo)
+    return capitulo.to_dict()
+  except Exception:
+    session.rollback()
+    raise
+  finally:
+    session.close()
 
 
 def cadastrar_pdf_url(dados):
-    """Salva no banco a URL pública de um PDF já enviado à nuvem."""
-    url        = _texto_obrigatorio(dados.get("url"), "url")
-    obra_id    = dados.get("obra_id")
-    capitulo_id = dados.get("capitulo_id")
+  """Salva no banco a URL pública de um PDF já enviado à nuvem."""
+  url        = _texto_obrigatorio(dados.get("url"), "url")
+  obra_id    = dados.get("obra_id")
+  capitulo_id = dados.get("capitulo_id")
 
-    if not obra_id:
-        raise ValueError("O campo 'obra_id' é obrigatório.")
-    obra_id = int(obra_id)
+  if not obra_id:
+    raise ValueError("O campo 'obra_id' é obrigatório.")
+  obra_id = int(obra_id)
 
-    session = SessionLocal()
-    try:
-        obra = session.get(Obra, obra_id)
-        if obra is None:
-            raise ValueError(f"Obra {obra_id} não encontrada.")
+  session = SessionLocal()
+  try:
+    obra = session.get(Obra, obra_id)
+    if obra is None:
+      raise ValueError(f"Obra {obra_id} não encontrada.")
 
-        # Validar capitulo_id se fornecido
-        if capitulo_id:
-            capitulo_id = int(capitulo_id)
-            capitulo = session.get(Capitulo, capitulo_id)
-            if capitulo is None:
-                raise ValueError(f"Capítulo {capitulo_id} não encontrado.")
-            if capitulo.obra_id != obra_id:
-                raise ValueError("O capítulo não pertence a esta obra.")
+    # Validar capitulo_id se fornecido
+    if capitulo_id:
+      capitulo_id = int(capitulo_id)
+      capitulo = session.get(Capitulo, capitulo_id)
+      if capitulo is None:
+        raise ValueError(f"Capítulo {capitulo_id} não encontrado.")
+      if capitulo.obra_id != obra_id:
+        raise ValueError("O capítulo não pertence a esta obra.")
 
-        pdf = PdfUrl(url=url, obra_id=obra_id, capitulo_id=capitulo_id)
-        session.add(pdf)
-        session.commit()
-        session.refresh(pdf)
-        return pdf.to_dict()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    pdf = PdfUrl(url=url, obra_id=obra_id, capitulo_id=capitulo_id)
+    session.add(pdf)
+    session.commit()
+    session.refresh(pdf)
+    return pdf.to_dict()
+  except Exception:
+    session.rollback()
+    raise
+  finally:
+    session.close()

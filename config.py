@@ -1,8 +1,10 @@
+"""
+Configurações da aplicação InkHub.
 
-"""Cloudinary configuration.
-
-Reads credentials from environment variables (optionally from a .env file).
-This file no longer performs uploads on import; run as a script for the example usage.
+Inclui:
+- Configuração do Cloudinary para upload de PDFs
+- Configuração do Flask (chave secreta, limite de upload)
+- Caminhos do projeto
 """
 
 import os
@@ -11,26 +13,32 @@ import cloudinary
 import cloudinary.uploader
 from cloudinary.utils import cloudinary_url
 
-# Load .env if present
+# Carrega variáveis de ambiente do arquivo .env se existir
 load_dotenv()
 
-# Read credentials from environment, falling back to the previous defaults
+# ── Credenciais do Cloudinary ───────────────────────────────────────────────────
+# Lê as credenciais do Cloudinary das variáveis de ambiente
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-# Paths
+# ── Caminhos do Projeto ───────────────────────────────────────────────────────────
+# Diretório raiz do projeto
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+# Diretório instance para arquivos de dados
 INSTANCE_DIR = os.path.join(PROJECT_ROOT, "instance")
 
+# ── Classe de Configuração do Flask ───────────────────────────────────────────────
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")
-    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB
+    """Configurações da aplicação Flask."""
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")  # Chave secreta para sessões
+    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # Limite de upload: 50 MB
     CLOUDINARY_CLOUD_NAME = CLOUDINARY_CLOUD_NAME
     CLOUDINARY_API_KEY = CLOUDINARY_API_KEY
     CLOUDINARY_API_SECRET = CLOUDINARY_API_SECRET
 
-# Configuration
+# ── Configuração do Cloudinary ───────────────────────────────────────────────────
+# Configura o SDK do Cloudinary com as credenciais
 cloudinary.config(
     cloud_name=CLOUDINARY_CLOUD_NAME,
     api_key=CLOUDINARY_API_KEY,
@@ -39,8 +47,9 @@ cloudinary.config(
 )
 
 
+# ── Função de Exemplo ───────────────────────────────────────────────────────────
 def example_upload():
-    """Example: upload and show transformed URLs when run as a script."""
+    """Exemplo: upload e transformação de imagens quando executado como script."""
     upload_result = cloudinary.uploader.upload(
         "https://res.cloudinary.com/demo/image/upload/getting-started/shoes.jpg",
         public_id="shoes",
