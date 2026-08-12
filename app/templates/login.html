@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkHub — Entrar</title>
   <style>
-    /* Reset básico para remover margens e paddings padrão */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Estilos do corpo da página */
     body {
       font-family: system-ui, sans-serif;
       background: #0f0f13;
@@ -20,7 +18,7 @@
       justify-content: center;
     }
 
-    /* Marca d'água de fundo com gradientes roxos */
+    /* marca d'água de fundo */
     body::before {
       content: "";
       position: fixed;
@@ -31,7 +29,6 @@
       pointer-events: none;
     }
 
-    /* Card principal centralizado */
     .card {
       width: 100%;
       max-width: 380px;
@@ -42,7 +39,6 @@
       position: relative;
     }
 
-    /* Logo e título */
     .logo {
       text-align: center;
       margin-bottom: 2rem;
@@ -51,7 +47,6 @@
     .logo h1 span { color: #7c3aed; }
     .logo p { font-size: .85rem; color: #6b7280; margin-top: .3rem; }
 
-    /* Campos do formulário */
     .campo {
       margin-bottom: 1.1rem;
     }
@@ -80,7 +75,6 @@
       border-color: #ef4444;
     }
 
-    /* Wrapper do campo de senha com botão de mostrar/ocultar */
     .senha-wrapper {
       position: relative;
     }
@@ -103,7 +97,6 @@
     }
     .toggle-senha:hover { color: #9ca3af; }
 
-    /* Botão principal (entrar/cadastrar) */
     .btn-entrar {
       width: 100%;
       background: #7c3aed;
@@ -120,7 +113,6 @@
     .btn-entrar:hover { background: #6d28d9; }
     .btn-entrar:active { transform: scale(.98); }
 
-    /* Mensagem de erro */
     .erro {
       background: rgba(239,68,68,.12);
       border: 1px solid rgba(239,68,68,.3);
@@ -134,7 +126,6 @@
       gap: .5rem;
     }
 
-    /* Link de voltar para o catálogo */
     .voltar {
       display: block;
       text-align: center;
@@ -145,7 +136,6 @@
     }
     .voltar:hover { color: #a78bfa; }
 
-    /* Botão secundário (cadastrar) */
     .btn-cadastrar {
       width: 100%;
       background: transparent;
@@ -161,7 +151,6 @@
     }
     .btn-cadastrar:hover { background: rgba(124,58,237,.1); color: #a78bfa; }
 
-    /* Formulário de cadastro (oculto por padrão) */
     .form-cadastro {
       display: none;
       margin-top: 1.2rem;
@@ -170,13 +159,11 @@
     }
     .form-cadastro.visible { display: block; }
 
-    /* Formulário de login */
     .form-login {
       display: block;
     }
     .form-login.hidden { display: none; }
 
-    /* Wrapper do botão cadastrar */
     .btn-cadastrar-wrapper {
       display: block;
     }
@@ -185,14 +172,12 @@
 </head>
 <body>
 
-<!-- Card principal com formulários de login e cadastro -->
 <div class="card">
   <div class="logo">
     <h1>Ink<span>Hub</span></h1>
     <p>Área administrativa</p>
   </div>
 
-  <!-- Exibe mensagem de erro se houver (Jinja2 template) -->
   {% if erro %}
   <div class="erro">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -203,7 +188,6 @@
   </div>
   {% endif %}
 
-  <!-- Formulário de login -->
   <form method="POST" action="/login" class="form-login" id="form-login">
     <div class="campo">
       <label for="email">E-mail</label>
@@ -215,7 +199,6 @@
       <div class="senha-wrapper">
         <input id="senha" name="senha" type="password" placeholder="••••••••"
                autocomplete="current-password" required />
-        <!-- Botão para mostrar/ocultar senha -->
         <button type="button" class="toggle-senha" onclick="toggleSenha()" aria-label="Mostrar senha">
           <svg id="olho-aberto" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
@@ -230,12 +213,10 @@
     <button class="btn-entrar" type="submit">Entrar</button>
   </form>
 
-  <!-- Botão para mostrar formulário de cadastro -->
   <div class="btn-cadastrar-wrapper" id="btn-cadastrar-wrapper">
     <button class="btn-cadastrar" type="button" onclick="toggleCadastro()">Cadastrar</button>
   </div>
 
-  <!-- Formulário de cadastro (oculto por padrão) -->
   <div class="form-cadastro" id="form-cadastro">
     <form method="POST" action="/register">
       <div class="campo">
@@ -255,21 +236,15 @@
     </form>
   </div>
 
-  <!-- Link para voltar ao catálogo público -->
   <a class="voltar" href="/">← Voltar para o catálogo</a>
 </div>
 
 <script>
-/* ══════════════════════════════════════════════
-   Funções JavaScript para interatividade
-══════════════════════════════════════════════ */
-
-// Alterna entre mostrar e ocultar a senha
 function toggleSenha() {
   const senhaInput = document.getElementById('senha');
   const olhoAberto = document.getElementById('olho-aberto');
   const olhoFechado = document.getElementById('olho-fechado');
-
+  
   if (senhaInput.type === 'password') {
     senhaInput.type = 'text';
     olhoAberto.style.display = 'block';
@@ -281,12 +256,11 @@ function toggleSenha() {
   }
 }
 
-// Alterna entre formulário de login e cadastro
 function toggleCadastro() {
   const formCadastro = document.getElementById('form-cadastro');
   const formLogin = document.getElementById('form-login');
   const btnCadastrarWrapper = document.getElementById('btn-cadastrar-wrapper');
-
+  
   formCadastro.classList.toggle('visible');
   formLogin.classList.toggle('hidden');
   btnCadastrarWrapper.classList.toggle('hidden');

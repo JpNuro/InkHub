@@ -11,10 +11,8 @@ from werkzeug.security import generate_password_hash
 
 
 # ── Listagens ─────────────────────────────────────────────────────────────────
-# Funções para listar dados do banco de dados
 
 def listar_obras():
-  """Lista todas as obras do banco ordenadas por título."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(Obra).order_by(Obra.titulo_obra)).all()
@@ -24,7 +22,6 @@ def listar_obras():
 
 
 def listar_capitulos():
-  """Lista todos os capítulos do banco ordenados por número."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(Capitulo).order_by(Capitulo.numero_capitulo)).all()
@@ -34,7 +31,6 @@ def listar_capitulos():
 
 
 def listar_usuarios():
-  """Lista todos os usuários do banco ordenados por nome."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(Usuario).order_by(Usuario.nome)).all()
@@ -44,7 +40,6 @@ def listar_usuarios():
 
 
 def listar_pdf_urls():
-  """Lista todas as URLs de PDF do banco ordenadas por ID."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(PdfUrl).order_by(PdfUrl.id)).all()
@@ -76,17 +71,15 @@ def buscar_usuario_por_email(email: str):
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-# Funções auxiliares para validação
+
 
 def _texto_obrigatorio(valor, campo):
-  """Valida se um campo de texto obrigatório foi preenchido."""
   if valor is None or str(valor).strip() == "":
     raise ValueError(f"O campo '{campo}' é obrigatório.")
   return str(valor).strip()
 
 
 def _texto_opcional(valor):
-  """Retorna o valor de texto ou None se vazio."""
   if valor is None:
     return None
   texto = str(valor).strip()
@@ -94,10 +87,9 @@ def _texto_opcional(valor):
 
 
 # ── Cadastros ─────────────────────────────────────────────────────────────────
-# Funções para criar novos registros no banco de dados
+
 
 def cadastrar_usuario(dados):
-  """Cadastra um novo usuário no banco com senha hasheada."""
   nome  = _texto_obrigatorio(dados.get("nome"), "nome")
   email = _texto_opcional(dados.get("email"))
   senha = _texto_opcional(dados.get("senha"))
@@ -117,7 +109,6 @@ def cadastrar_usuario(dados):
 
 
 def cadastrar_obra(dados):
-  """Cadastra uma nova obra no banco vinculada ao autor."""
   titulo_obra = _texto_obrigatorio(dados.get("titulo_obra"), "titulo_obra")
   autor_id    = _texto_obrigatorio(dados.get("autor_id"), "autor_id")
   categoria   = _texto_opcional(dados.get("categoria")) or None
@@ -149,7 +140,6 @@ def cadastrar_obra(dados):
 
 
 def cadastrar_capitulo(dados):
-  """Cadastra um novo capítulo no banco com número auto-incrementado."""
   titulo_capitulo = _texto_obrigatorio(dados.get("titulo_capitulo"), "titulo_capitulo")
   obra_id         = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
 

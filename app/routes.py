@@ -16,18 +16,15 @@ from database import SessionLocal
 from models import Usuario
 
 # ── Blueprints ────────────────────────────────────────────────────────────────
-# Blueprint para páginas HTML
+
 paginas = fk.Blueprint("paginas", __name__)
-# Blueprint para API REST
 api     = fk.Blueprint("api", __name__, url_prefix="/api")
 
 
-# Helper para retornar erro JSON
 def _erro(mensagem, status=400):
   return fk.jsonify({"erro": mensagem}), status
 
 
-# Helper para verificar se usuário está logado
 def _login_obrigatorio():
   """Retorna redirect se não houver sessão ativa, ou None se ok."""
   if "usuario_id" not in fk.session:
@@ -45,7 +42,6 @@ def leitura():
 
 @paginas.get("/login")
 def login_get():
-  # Se já estiver logado, redireciona para o painel
   if "usuario_id" in fk.session:
     return fk.redirect(fk.url_for("paginas.painel"))
   return fk.render_template("login.html", erro=None, email_salvo="")
@@ -53,7 +49,6 @@ def login_get():
 
 @paginas.post("/login")
 def login_post():
-  # Processa o formulário de login
   email = (fk.request.form.get("email") or "").strip()
   senha = (fk.request.form.get("senha") or "").strip()
 
@@ -92,7 +87,6 @@ def login_post():
       email_salvo=email,
     ), 401
 
-  # Cria sessão do usuário
   fk.session["usuario_id"]   = usuario["id"]
   fk.session["usuario_nome"] = usuario["nome"]
   return fk.redirect(fk.url_for("paginas.painel"))
@@ -100,7 +94,6 @@ def login_post():
 
 @paginas.get("/logout")
 def logout():
-  # Limpa a sessão e redireciona para a página inicial
   fk.session.clear()
   return fk.redirect(fk.url_for("paginas.leitura"))
 
@@ -109,7 +102,6 @@ def logout():
 
 @paginas.get("/painel")
 def painel():
-  # Página administrativa protegida (requer login)
   redir = _login_obrigatorio()
   if redir:
     return redir
@@ -120,7 +112,6 @@ def painel():
 
 
 # ── API — Leitura (pública) ───────────────────────────────────────────────────
-# Endpoints públicos para listar dados
 
 @api.get("/usuarios")
 def get_usuarios():
@@ -143,7 +134,6 @@ def get_pdf_urls():
 
 
 # ── API — Cadastro (protegido) ────────────────────────────────────────────────
-# Endpoints protegidos que requerem autenticação
 
 def _api_auth():
   """Retorna resposta 401 se não autenticado, ou None se ok."""
@@ -154,7 +144,6 @@ def _api_auth():
 
 @api.post("/usuarios")
 def criar_usuario():
-  # Cria um novo usuário (requer autenticação)
   negado = _api_auth()
   if negado:
     return negado
@@ -169,7 +158,6 @@ def criar_usuario():
 
 @api.post("/obras")
 def criar_obra():
-  # Cria uma nova obra (requer autenticação)
   negado = _api_auth()
   if negado:
     return negado
@@ -184,7 +172,6 @@ def criar_obra():
 
 @api.post("/capitulos")
 def criar_capitulo():
-  # Cria um novo capítulo (requer autenticação)
   negado = _api_auth()
   if negado:
     return negado
@@ -198,18 +185,16 @@ def criar_capitulo():
 
 
 # ── API — Minhas obras / meus capítulos (protegido) ─────────────────────────
-# Endpoints para listar dados do usuário autenticado
+
 
 @api.get("/minhas_obras")
 def get_minhas_obras():
-  # Lista apenas as obras do usuário autenticado
   negado = _api_auth()
   if negado:
     return negado
   usuario_id = fk.session.get("usuario_id")
   try:
-    # filtra obras por autor_id
-    obras = [o for o in servico.listar_obras() if o.get('autor') and (o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'))]
+    obras = [o for o in servico.listar_obras() if o.get('autor_id') == usuario_id]
     return fk.jsonify(obras)
   except Exception:
     return fk.jsonify([])
@@ -217,27 +202,23 @@ def get_minhas_obras():
 
 @api.get("/meus_capitulos")
 def get_meus_capitulos():
-  # Lista apenas os capítulos das obras do usuário autenticado
   negado = _api_auth()
   if negado:
     return negado
   usuario_id = fk.session.get("usuario_id")
   try:
-    minhas = []
-    for o in servico.listar_obras():
-      if o.get('autor_id') == usuario_id or o.get('autor') == fk.session.get('usuario_nome'):
-        minhas.append(o['id'])
+    minhas = [o['id'] for o in servico.listar_obras() if o.get('autor_id') == usuario_id]
     capitulos = [c for c in servico.listar_capitulos() if c.get('obra_id') in minhas]
     return fk.jsonify(capitulos)
   except Exception:
     return fk.jsonify([])
 
 
-# ── Registro público na tela de login ─────────────────────────────────────────
+# ── Registro público na tela de login
+
 
 @paginas.post("/register")
 def register_post():
-  # Processa o formulário de cadastro público na tela de login
   if "usuario_id" in fk.session:
     return fk.redirect(fk.url_for("paginas.painel"))
   nome = (fk.request.form.get("nome") or "").strip()
@@ -250,7 +231,6 @@ def register_post():
   except ValueError as e:
     return fk.render_template("login.html", erro=str(e), email_salvo=email), 400
 
-  # Cria sessão do novo usuário
   fk.session["usuario_id"] = usuario["id"]
   fk.session["usuario_nome"] = usuario["nome"]
   return fk.redirect(fk.url_for("paginas.painel"))
@@ -260,7 +240,6 @@ def register_post():
 
 @api.post("/upload_pdf")
 def upload_pdf():
-  # Faz upload de PDF para o Cloudinary e salva a URL no banco
   negado = _api_auth()
   if negado:
     return negado
@@ -282,7 +261,6 @@ def upload_pdf():
     return _erro("'obra_id' deve ser um número inteiro.")
 
   try:
-    # Upload para o Cloudinary
     resultado = cloudinary.uploader.upload(
       arquivo.stream,
       resource_type="image",
@@ -296,7 +274,6 @@ def upload_pdf():
     return _erro(f"Falha no upload para o Cloudinary: {e}", 502)
 
   try:
-    # Salva a URL do PDF no banco de dados
     dados_pdf = {"url": url_pdf, "obra_id": obra_id_int}
     if capitulo_id:
       dados_pdf["capitulo_id"] = int(capitulo_id)

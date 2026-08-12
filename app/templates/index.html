@@ -5,28 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkHub — Painel</title>
   <style>
-    /* Reset básico para remover margens e paddings padrão */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Variáveis CSS para cores do tema escuro */
     :root {
-      --bg:       #0f0f13;       /* Fundo principal */
-      --surface:  #16161f;      /* Fundo secundário */
-      --surface2: #1a1a24;      /* Fundo terciário */
-      --border:   #2a2a3a;      /* Cor das bordas */
-      --purple:   #7c3aed;      /* Roxo principal */
-      --purple-d: #6d28d9;      /* Roxo escuro (dark) */
-      --purple-l: #a78bfa;      /* Roxo claro (light) */
-      --purple-x: #4c1d95;      /* Roxo extra escuro */
-      --purple-bg:#1e1030;      /* Fundo roxo */
-      --text:     #e2e2e2;      /* Cor do texto principal */
-      --muted:    #9ca3af;      /* Cor do texto secundário */
-      --dim:      #6b7280;      /* Cor do texto apagado */
-      --ok:       #4ade80;      /* Verde para sucesso */
-      --err:      #f87171;      /* Vermelho para erro */
+      --bg:       #0f0f13;
+      --surface:  #16161f;
+      --surface2: #1a1a24;
+      --border:   #2a2a3a;
+      --purple:   #7c3aed;
+      --purple-d: #6d28d9;
+      --purple-l: #a78bfa;
+      --purple-x: #4c1d95;
+      --purple-bg:#1e1030;
+      --text:     #e2e2e2;
+      --muted:    #9ca3af;
+      --dim:      #6b7280;
+      --ok:       #4ade80;
+      --err:      #f87171;
     }
 
-    /* Estilos do corpo da página */
     body {
       font-family: system-ui, sans-serif;
       background: var(--bg);
@@ -36,7 +33,6 @@
       flex-direction: column;
     }
 
-    /* ── Topo (cabeçalho) ── */
     .topo {
       display: flex;
       align-items: center;
@@ -53,7 +49,6 @@
     .topo-direita { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
 
 
-    /* Botões de link (ver catálogo) */
     .btn-link {
       font-size: .82rem;
       color: var(--dim);
@@ -64,7 +59,6 @@
     }
     .btn-link:hover { color: var(--purple-l); background: var(--purple-bg); }
 
-    /* Botão de logout */
     .btn-logout {
       font-size: .82rem;
       color: var(--purple-l);
@@ -76,14 +70,12 @@
     }
     .btn-logout:hover { background: var(--purple-x); color: #fff; }
 
-    /* ── Conteúdo das seções (obras e capítulos) ── */
     .secao-conteudo { display: none; flex: 1; }
     .secao-conteudo.ativa { display: flex; }
 
     .secao-obras { display: flex; }
     .secao-capitulos { display: none; }
 
-    /* ── Layout duas colunas (formulário à esquerda + tabela à direita) ── */
     .dois-col {
       display: grid;
       grid-template-columns: 340px 1fr;
@@ -92,7 +84,6 @@
       overflow: hidden;
     }
 
-    /* Coluna do formulário */
     .col-form {
       background: var(--surface);
       border-right: 1px solid var(--border);
@@ -101,189 +92,168 @@
     }
     .col-form h2 { font-size: 1rem; color: var(--purple-l); margin-bottom: 1.2rem; }
 
-    /* Campos do formulário */
     .campo { margin-bottom: 1rem; }
     .campo label {
       display: block;
-      font-size: .8rem;
+      font-size: .82rem;
       color: var(--muted);
-      font-weight: 500;
       margin-bottom: .35rem;
-      text-transform: uppercase;
-      letter-spacing: .04em;
+      font-weight: 500;
     }
     .campo input, .campo select {
       width: 100%;
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       color: var(--text);
-      padding: .55rem .8rem;
+      padding: .6rem .8rem;
       font-size: .9rem;
-      transition: border-color .15s;
     }
     .campo input:focus, .campo select:focus { outline: none; border-color: var(--purple); }
     .campo select option { background: var(--surface2); }
 
-    /* Botão de cadastrar */
     .btn-cadastrar {
       width: 100%;
       background: var(--purple);
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       color: #fff;
       font-size: .95rem;
       font-weight: 700;
-      padding: .65rem;
+      padding: .7rem;
       cursor: pointer;
-      margin-top: .5rem;
-      transition: background .15s;
+      transition: background .15s, transform .1s;
     }
     .btn-cadastrar:hover { background: var(--purple-d); }
 
-    /* Mensagens de formulário (sucesso/erro) */
     .msg-form {
       margin-top: .75rem;
       font-size: .83rem;
-      min-height: 1.2em;
-      text-align: center;
+      display: none;
     }
+    .msg-form.visible { display: block; }
     .msg-ok  { color: var(--ok); }
     .msg-err { color: var(--err); }
 
-    /* Coluna da tabela */
     .col-tabela {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
       padding: 1.5rem;
-      gap: 1rem;
+      background: var(--surface2);
     }
     .tabela-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 1rem;
     }
     .tabela-header h2 { font-size: 1rem; color: var(--text); }
 
-    /* Botão de recarregar tabela */
     .btn-reload {
       background: none;
       border: 1px solid var(--border);
-      color: var(--dim);
       border-radius: 6px;
-      padding: .3rem .75rem;
-      font-size: .82rem;
+      color: var(--dim);
+      padding: .4rem .7rem;
+      font-size: .85rem;
       cursor: pointer;
       transition: border-color .15s, color .15s;
     }
     .btn-reload:hover { border-color: var(--purple); color: var(--purple-l); }
 
-    /* Container da tabela com scroll */
     .tabela-wrap { flex: 1; overflow: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .88rem; }
     thead th {
-      text-align: left;
-      padding: .55rem .85rem;
-      background: var(--surface);
+      position: sticky;
+      top: 0;
+      background: var(--surface2);
       color: var(--muted);
-      font-size: .78rem;
-      text-transform: uppercase;
-      letter-spacing: .05em;
+      font-weight: 600;
+      text-align: left;
+      padding: .75rem .9rem;
       border-bottom: 1px solid var(--border);
-      white-space: nowrap;
     }
     tbody td {
-      padding: .6rem .85rem;
+      padding: .75rem .9rem;
       border-bottom: 1px solid var(--border);
-      vertical-align: middle;
+      color: var(--text);
     }
     tbody tr:hover td { background: var(--surface); }
     .status-tabela { font-size: .85rem; color: var(--dim); }
 
-    /* ── Upload PDF (Cloudinary) ── */
     .upload-layout {
       display: grid;
       grid-template-columns: 380px 1fr;
+      gap: 0;
       flex: 1;
       overflow: hidden;
     }
-
     .upload-form {
       background: var(--surface);
       border-right: 1px solid var(--border);
       padding: 1.5rem;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.1rem;
     }
     .upload-form h2 { font-size: 1rem; color: var(--purple-l); }
 
-    /* Área de drag & drop para PDF */
     .drop-zone {
       border: 2px dashed var(--purple-x);
       border-radius: 12px;
-      padding: 1.75rem 1rem;
+      padding: 2rem 1.5rem;
       text-align: center;
+      margin-bottom: 1rem;
       cursor: pointer;
-      transition: background .15s, border-color .15s;
+      transition: border-color .15s, background .15s;
     }
-    .drop-zone:hover, .drop-zone.over { background: var(--purple-bg); border-color: var(--purple); }
-
-    .drop-zone .drop-icon { font-size: 2rem; margin-bottom: .5rem; }
-    .drop-zone p   { font-size: .88rem; color: var(--muted); }
+    .drop-zone:hover { border-color: var(--purple); background: var(--purple-bg); }
+    .drop-zone p { font-size: .9rem; color: var(--muted); margin-bottom: .4rem; }
     .drop-zone small { font-size: .78rem; color: var(--dim); }
     .drop-zone input { display: none; }
 
-    /* Nome do arquivo selecionado */
     #nome-arquivo {
       font-size: .82rem;
       color: var(--purple-l);
-      background: rgba(124,58,237,.1);
-      border-radius: 6px;
-      padding: .4rem .75rem;
+      margin-bottom: 1rem;
       display: none;
       word-break: break-all;
     }
 
-    /* Botão de upload */
     .btn-upload {
       background: var(--purple);
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       color: #fff;
       font-size: .95rem;
       font-weight: 700;
-      padding: .65rem;
+      padding: .7rem;
       cursor: pointer;
+      width: 100%;
       transition: background .15s;
     }
     .btn-upload:hover:not(:disabled) { background: var(--purple-d); }
     .btn-upload:disabled { opacity: .45; cursor: not-allowed; }
 
-    /* Barra de progresso do upload */
     .progress-bar-wrap {
       background: var(--border);
       border-radius: 99px;
       height: 6px;
+      margin-top: .8rem;
       overflow: hidden;
       display: none;
     }
+    .progress-bar-wrap.visible { display: block; }
     .progress-bar {
-      height: 100%;
       background: var(--purple);
+      height: 100%;
       width: 0%;
-      transition: width .3s;
+      transition: width .1s linear;
       border-radius: 99px;
     }
 
-    /* Mensagens de upload */
     .msg-upload { font-size: .83rem; min-height: 1.2em; }
     .msg-upload.ok  { color: var(--ok); }
     .msg-upload.err { color: var(--err); }
 
-    /* Estilo da scrollbar */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   </style>
@@ -302,13 +272,11 @@
 </header>
 
 
-<!-- ══════════ SEÇÃO OBRAS ══════════ -->
-<!-- Seção para cadastrar e listar obras -->
+<!-- SEÇÃO OBRAS -->
 <div class="secao-conteudo secao-obras" id="secao-obras">
   <div class="dois-col">
     <div class="col-form">
       <h2>Nova obra</h2>
-      <!-- Formulário de cadastro de obra -->
       <div class="campo">
         <label>Título *</label>
         <input id="o-titulo" type="text" placeholder="Título da obra" />
@@ -323,7 +291,6 @@
       </div>
       <button class="btn-cadastrar" id="btn-obra">Cadastrar obra</button>
       <div class="msg-form" id="msg-obra"></div>
-      <!-- Botão para ir para seção de capítulos (só aparece após cadastrar obra) -->
       <button class="btn-cadastrar" id="btn-ir-capitulos" style="display:none; background: var(--purple-d); margin-top: 1rem; padding: .85rem; font-size: 1rem;">Novo capítulo →</button>
     </div>
     <div class="col-tabela">
@@ -342,15 +309,12 @@
   </div>
 </div>
 
-<!-- ══════════ SEÇÃO CAPÍTULOS ══════════ -->
-<!-- Seção para cadastrar capítulos e enviar PDFs -->
+<!-- SEÇÃO CAPÍTULOS -->
 <div class="secao-conteudo secao-capitulos" id="secao-capitulos">
   <div class="dois-col">
     <div class="col-form">
-      <!-- Botão para voltar para seção de obras -->
       <button class="btn-cadastrar" id="btn-voltar-obras" style="background: var(--purple-d); margin-bottom: 1rem;">← Voltar para obras</button>
       <h2>Novo capítulo</h2>
-      <!-- Formulário de cadastro de capítulo -->
       <div class="campo">
         <label>Obra *</label>
         <select id="c-obra">
@@ -361,14 +325,12 @@
         <label>Título *</label>
         <input id="c-titulo" type="text" placeholder="Título do capítulo" />
       </div>
-      <!-- Botão desabilitado até selecionar um PDF -->
       <button class="btn-cadastrar" id="btn-capitulo" disabled>Cadastrar capítulo</button>
       <div class="msg-form" id="msg-capitulo"></div>
 
       <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
 
       <h2>Enviar PDF</h2>
-      <!-- Área de drag & drop para selecionar PDF -->
       <div class="drop-zone" id="drop-zone">
         <div class="drop-icon">📄</div>
         <p>Arraste o PDF aqui</p>
@@ -378,7 +340,6 @@
 
       <div id="nome-arquivo"></div>
 
-      <!-- Seleção de obra e capítulo para vincular ao PDF -->
       <div class="campo">
         <label>Obra *</label>
         <select id="pdf-obra">
@@ -393,7 +354,6 @@
         </select>
       </div>
 
-      <!-- Barra de progresso do upload -->
       <div class="progress-bar-wrap" id="progress-wrap">
         <div class="progress-bar" id="progress-bar"></div>
       </div>
@@ -421,17 +381,10 @@
 </div>
 
 <script>
-/* ══════════════════════════════════════════════
-   Utilitários JavaScript
-══════════════════════════════════════════════ */
-// Atalho para selecionar elemento por ID
 const $  = id  => document.getElementById(id);
-// Atalho para selecionar múltiplos elementos por seletor CSS
 const $$ = sel => document.querySelectorAll(sel);
-// Função para fazer requisições à API e retornar JSON
 const api = path => fetch(path).then(r => r.json());
 
-// Função para exibir mensagens de sucesso/erro nos formulários
 function setMsg(elId, texto, tipo) {
   const el = $(elId);
   if (!el) {
@@ -443,35 +396,19 @@ function setMsg(elId, texto, tipo) {
   el.style.display = "block";
 }
 
-/* ══════════════════════════════════════════════
-   Navegação entre seções (obras ↔ capítulos)
-══════════════════════════════════════════════ */
-// Botão para ir da seção de obras para capítulos
 $("btn-ir-capitulos").addEventListener("click", () => {
   $("secao-obras").style.display = "none";
   $("secao-capitulos").style.display = "flex";
 });
 
-// Botão para voltar da seção de capítulos para obras
 $("btn-voltar-obras").addEventListener("click", () => {
   $("secao-capitulos").style.display = "none";
   $("secao-obras").style.display = "flex";
 });
 
-/* ══════════════════════════════════════════════
-   Dados em memória (cache)
-══════════════════════════════════════════════ */
-// Arrays para armazenar obras e capítulos carregados da API
 let obras = [], capitulos = [];
 
-/* ══════════════════════════════════════════════
-   Gerenciamento de selects (dropdowns)
-══════════════════════════════════════════════ */
-// Popula os selects de obra nos formulários de capítulo e PDF
 function popularSelects() {
-  // O autor é o usuário autenticado (mostrado como texto no formulário)
-
-  // Obra (select de capítulos)
   const selObraC = $("c-obra");
   const curObraC = selObraC.value;
   selObraC.innerHTML = '<option value="">— Selecione a obra —</option>';
@@ -482,7 +419,6 @@ function popularSelects() {
   });
   selObraC.value = curObraC;
 
-  // Obra (select de PDFs)
   const selObraP = $("pdf-obra");
   const curObraP = selObraP.value;
   selObraP.innerHTML = '<option value="">— Selecione a obra —</option>';
@@ -496,7 +432,6 @@ function popularSelects() {
   atualizarBtnUpload();
 }
 
-// Atualiza o select de capítulos quando uma obra é selecionada no formulário de PDF
 function atualizarCapitulosPdf() {
   const obraId = $("pdf-obra").value;
   const selCap = $("pdf-capitulo");
@@ -515,11 +450,6 @@ function atualizarCapitulosPdf() {
   selCap.value = curCap;
 }
 
-/* ══════════════════════════════════════════════
-   Renderização de tabelas
-══════════════════════════════════════════════ */
-
-// Renderiza a tabela de obras
 function renderObras() {
   const tb = $("tbody-obras");
   $("status-obras").textContent = obras.length ? "" : "Nenhuma obra cadastrada.";
@@ -528,7 +458,6 @@ function renderObras() {
   `).join("");
 }
 
-// Renderiza a tabela de capítulos
 function renderCapitulos() {
   const mapaObras = Object.fromEntries(obras.map(o => [o.id, o.titulo]));
   const tb = $("tbody-capitulos");
@@ -544,10 +473,6 @@ function renderCapitulos() {
     `).join("");
 }
 
-/* ══════════════════════════════════════════════
-   Recarregamento individual de tabelas
-══════════════════════════════════════════════ */
-// Botões de recarregar (↺) para obras e capítulos
 $$("[data-reload]").forEach(btn => {
   btn.addEventListener("click", async () => {
     switch (btn.dataset.reload) {
@@ -561,16 +486,11 @@ $$("[data-reload]").forEach(btn => {
   });
 });
 
-/* ══════════════════════════════════════════════
-   Cadastro de obra
-══════════════════════════════════════════════ */
-// Evento de clique no botão "Cadastrar obra"
 $("btn-obra").addEventListener("click", async () => {
   const titulo = $("o-titulo").value.trim();
   const categoria = $("o-categoria").value.trim();
   const ano = $("o-ano").value.trim();
 
-  // Validação dos campos obrigatórios
   if (!titulo) {
     setMsg("msg-obra", "✗ O campo Título é obrigatório.", "err");
     return;
@@ -607,15 +527,10 @@ $("btn-obra").addEventListener("click", async () => {
   } catch (e) { setMsg("msg-obra", "✗ " + e.message, "err"); }
 });
 
-/* ══════════════════════════════════════════════
-   Cadastro de capítulo
-══════════════════════════════════════════════ */
-// Evento de clique no botão "Cadastrar capítulo"
 $("btn-capitulo").addEventListener("click", async () => {
   const obra = $("c-obra").value;
   const titulo = $("c-titulo").value.trim();
 
-  // Validação dos campos obrigatórios
   if (!obra) {
     setMsg("msg-capitulo", "✗ O campo Obra é obrigatório.", "err");
     return;
@@ -644,16 +559,11 @@ $("btn-capitulo").addEventListener("click", async () => {
   } catch (e) { setMsg("msg-capitulo", "✗ " + e.message, "err"); }
 });
 
-/* ══════════════════════════════════════════════
-   Upload de PDF para Cloudinary
-══════════════════════════════════════════════ */
-// Variável para armazenar o arquivo PDF selecionado
 let arquivoPdf = null;
 
 const dropZone = $("drop-zone");
 const inputPdf = $("input-pdf");
 
-// Eventos de drag & drop para selecionar PDF
 dropZone.addEventListener("click", () => inputPdf.click());
 dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("over"); });
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("over"));
@@ -672,7 +582,6 @@ $("pdf-obra").addEventListener("change", () => {
   atualizarBtnUpload();
 });
 
-// Define o arquivo PDF selecionado e habilita o botão de cadastrar capítulo
 function definirArquivo(f) {
   arquivoPdf = f;
   const nomeEl = $("nome-arquivo");
@@ -683,26 +592,22 @@ function definirArquivo(f) {
   mostrarMsgUpload("", "");
 }
 
-// Habilita/desabilita o botão de upload conforme seleção de arquivo e obra
 function atualizarBtnUpload() {
   $("btn-upload").disabled = !(arquivoPdf && $("pdf-obra").value);
 }
 
-// Exibe mensagens de upload (sucesso/erro)
 function mostrarMsgUpload(texto, tipo) {
   const el = $("msg-upload");
   el.textContent = texto;
   el.className   = "msg-upload " + (tipo === "ok" ? "ok" : tipo === "err" ? "err" : "");
 }
 
-// Evento de clique no botão "Enviar para a nuvem"
 $("btn-upload").addEventListener("click", async () => {
   if (!arquivoPdf || !$("pdf-obra").value) return;
 
   $("btn-upload").disabled = true;
   mostrarMsgUpload("Enviando para o Cloudinary…", "");
 
-  // Barra de progresso simulada (o fetch não expõe progresso de upload facilmente)
   const wrap = $("progress-wrap");
   const bar  = $("progress-bar");
   wrap.style.display = "block";
@@ -731,7 +636,6 @@ $("btn-upload").addEventListener("click", async () => {
 
     mostrarMsgUpload("✓ PDF enviado e URL salva no banco!", "ok");
 
-    // Limpar formulário após sucesso
     arquivoPdf = null;
     $("nome-arquivo").style.display = "none";
     $("nome-arquivo").textContent   = "";
@@ -747,10 +651,6 @@ $("btn-upload").addEventListener("click", async () => {
   }
 });
 
-/* ══════════════════════════════════════════════
-   Inicialização da página
-══════════════════════════════════════════════ */
-// Carrega obras e capítulos ao iniciar a página
 async function carregarTodos() {
   [obras, capitulos] = await Promise.all([
     api("/api/minhas_obras"),
