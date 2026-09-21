@@ -1,0 +1,225 @@
+/* Ajustes compartilhados para telas pequenas do catálogo, leitor e painel. */
+
+@media (max-width: 768px) {
+  /* Catalogo e leitor */
+  body:has(.container) {
+    overflow-x: hidden;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 58px);
+    overflow: visible;
+  }
+
+  .container .sidebar {
+    flex: 0 0 auto;
+    max-height: 38vh;
+    border-right: 0;
+    border-bottom: 1px solid #2a2a3a;
+  }
+
+  .container .sidebar-header {
+    padding: .8rem 1rem;
+  }
+
+  .container #lista-obras {
+    max-height: 22vh;
+  }
+
+  .container .obra-card {
+    min-height: 48px;
+    padding: .8rem;
+  }
+
+  .container .painel {
+    min-height: 62vh;
+    overflow: visible;
+  }
+
+  .container .placeholder {
+    min-height: 38vh;
+    padding: 1.5rem 1rem;
+  }
+
+  .container .obra-detalhe {
+    min-height: 62vh;
+  }
+
+  .container .obra-detalhe-header {
+    padding: .8rem 1rem;
+  }
+
+  .container .abas-obra {
+    padding: 0 .5rem;
+  }
+
+  .container .aba-obra {
+    min-height: 44px;
+    padding: .7rem .75rem;
+  }
+
+  .container .cap-lista {
+    padding: .8rem 1rem;
+  }
+
+  .container .cap-item {
+    min-height: 48px;
+    padding: .7rem;
+  }
+
+  .container .pdf-barra {
+    align-items: stretch;
+    padding: .7rem .8rem;
+  }
+
+  .container .pdf-info,
+  .container .pdf-controles {
+    width: 100%;
+  }
+
+  .container .pdf-controles {
+    gap: .35rem;
+  }
+
+  .container .pdf-controles button {
+    flex: 1 1 calc(50% - .35rem);
+    min-height: 42px;
+    padding: .5rem .4rem;
+  }
+
+  .container #pdf-pagina-info {
+    width: 100%;
+    order: -1;
+    text-align: center;
+    padding: .25rem;
+  }
+
+  .container .pdf-reader-shell {
+    padding: .5rem;
+  }
+
+  .container .pdf-frame {
+    border-radius: 8px;
+  }
+
+  /* Painel administrativo */
+  body:has(.secao-conteudo) {
+    overflow-x: hidden;
+  }
+
+  body:has(.secao-conteudo) .topo {
+    min-height: 56px;
+    height: auto;
+    padding: .7rem 1rem;
+    flex-wrap: wrap;
+    gap: .45rem .7rem;
+  }
+
+  body:has(.secao-conteudo) .topo-sub {
+    order: 3;
+    flex-basis: 100%;
+    font-size: .78rem;
+  }
+
+  body:has(.secao-conteudo) .topo-usuario {
+    display: none;
+  }
+
+  body:has(.secao-conteudo) .topo-direita {
+    gap: .35rem;
+    font-size: .78rem;
+  }
+
+  body:has(.secao-conteudo) .btn-link,
+  body:has(.secao-conteudo) .btn-logout {
+    padding: .45rem .55rem;
+  }
+
+  body:has(.secao-conteudo) .secao-conteudo.ativa,
+  body:has(.secao-conteudo) .secao-obras,
+  body:has(.secao-conteudo) .secao-capitulos {
+    display: block;
+  }
+
+  body:has(.secao-conteudo) .dois-col,
+  body:has(.secao-conteudo) .upload-layout {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  body:has(.secao-conteudo) .col-form,
+  body:has(.secao-conteudo) .upload-form {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+    overflow: visible;
+  }
+
+  body:has(.secao-conteudo) .col-tabela {
+    min-height: 300px;
+    padding: 1rem;
+  }
+
+  body:has(.secao-conteudo) .tabela-header {
+    align-items: flex-start;
+    gap: .75rem;
+  }
+
+  body:has(.secao-conteudo) .btn-reload {
+    flex-shrink: 0;
+    min-height: 40px;
+  }
+
+  body:has(.secao-conteudo) .tabela-wrap {
+    overflow-x: auto;
+  }
+
+  body:has(.secao-conteudo) table {
+    min-width: 430px;
+  }
+
+  body:has(.secao-conteudo) .campo input,
+  body:has(.secao-conteudo) .campo select,
+  body:has(.secao-conteudo) .btn-cadastrar,
+  body:has(.secao-conteudo) .btn-upload {
+    min-height: 44px;
+  }
+
+  body:has(.secao-conteudo) .drop-zone {
+    padding: 1.5rem 1rem;
+  }
+
+  /* Login */
+  body:has(.card) {
+    padding: 1rem;
+  }
+
+  body:has(.card) .card {
+    width: min(100%, 380px);
+    padding: 1.75rem 1.15rem;
+    border-radius: 12px;
+  }
+
+  body:has(.card) .campo input,
+  body:has(.card) .btn-entrar,
+  body:has(.card) .btn-cadastrar {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  .container .pdf-controles button {
+    font-size: .74rem;
+  }
+
+  body:has(.secao-conteudo) .tabela-header {
+    flex-direction: column;
+  }
+
+  body:has(.secao-conteudo) .btn-reload {
+    width: 100%;
+  }
+}
