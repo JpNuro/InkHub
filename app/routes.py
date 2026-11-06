@@ -1,11 +1,12 @@
 """
-Rotas da aplicação InkHub.
+Rotas HTML e API HTTP da aplicação InkHub.
 
 Blueprints:
-  paginas  → páginas HTML  (/, /login, /logout, /painel)
-  api      → /api/...  (JSON)
+  paginas  -> páginas HTML (/, /login, /logout, /painel)
+  api      -> endpoints JSON sob /api/
 """
 
+# Integração de arquivos, respostas HTTP, persistência e autenticação.
 import cloudinary.uploader
 import flask as fk
 from sqlalchemy.exc import IntegrityError
@@ -15,24 +16,28 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from database import SessionLocal
 from models import Usuario
 
-# ── Blueprints ────────────────────────────────────────────────────────────────
+# ── Blueprints e respostas comuns ──────────────────────────────────────────────
 
+# Agrupa páginas HTML em URLs sem prefixo.
 paginas = fk.Blueprint("paginas", __name__)
+# Agrupa os endpoints JSON sob o prefixo /api.
 api     = fk.Blueprint("api", __name__, url_prefix="/api")
 
 
 def _erro(mensagem, status=400):
+  """Cria uma resposta JSON de erro com o status HTTP informado."""
   return fk.jsonify({"erro": mensagem}), status
 
 
 def _login_obrigatorio():
   """Retorna redirect se não houver sessão ativa, ou None se ok."""
   if "usuario_id" not in fk.session:
+    # Redireciona usuários anônimos para a tela de autenticação.
     return fk.redirect(fk.url_for("paginas.login_get"))
   return None
 
 
-# ── Páginas públicas ──────────────────────────────────────────────────────────
+# ── Páginas públicas e autenticação ───────────────────────────────────────────
 
 @paginas.get("/")
 def leitura():
@@ -42,6 +47,7 @@ def leitura():
 
 @paginas.get("/login")
 def login_get():
+  """Exibe o login, ou envia usuários autenticados ao painel."""
   if "usuario_id" in fk.session:
     return fk.redirect(fk.url_for("paginas.painel"))
   return fk.render_template("login.html", erro=None, email_salvo="")
@@ -49,6 +55,7 @@ def login_get():
 
 @paginas.post("/login")
 def login_post():
+  """Valida credenciais e inicia a sessão do usuário."""
   email = (fk.request.form.get("email") or "").strip()
   senha = (fk.request.form.get("senha") or "").strip()
 
@@ -94,14 +101,16 @@ def login_post():
 
 @paginas.get("/logout")
 def logout():
+  """Encerra a sessão atual e retorna ao catálogo."""
   fk.session.clear()
   return fk.redirect(fk.url_for("paginas.leitura"))
 
 
-# ── Página protegida ──────────────────────────────────────────────────────────
+# ── Painel protegido ──────────────────────────────────────────────────────────
 
 @paginas.get("/painel")
 def painel():
+  """Exibe o painel administrativo somente para usuários autenticados."""
   redir = _login_obrigatorio()
   if redir:
     return redir
@@ -111,39 +120,45 @@ def painel():
   )
 
 
-# ── API — Leitura (pública) ───────────────────────────────────────────────────
+# ── API pública de consulta ───────────────────────────────────────────────────
 
 @api.get("/usuarios")
 def get_usuarios():
+  """Lista os usuários em formato JSON."""
   return fk.jsonify(servico.listar_usuarios())
 
 
 @api.get("/obras")
 def get_obras():
+  """Lista as obras disponíveis no catálogo."""
   return fk.jsonify(servico.listar_obras())
 
 
 @api.get("/capitulos")
 def get_capitulos():
+  """Lista todos os capítulos cadastrados."""
   return fk.jsonify(servico.listar_capitulos())
 
 
 @api.get("/pdf_urls")
 def get_pdf_urls():
+  """Lista os PDFs associados às obras e capítulos."""
   return fk.jsonify(servico.listar_pdf_urls())
 
 
-# ── API — Cadastro (protegido) ────────────────────────────────────────────────
+# ── Autorização e API de cadastro protegida ───────────────────────────────────
 
 def _api_auth():
   """Retorna resposta 401 se não autenticado, ou None se ok."""
   if "usuario_id" not in fk.session:
+    # Mantém o formato de erro consistente para chamadas de API sem login.
     return fk.jsonify({"erro": "Não autenticado."}), 401
   return None
 
 
 @api.post("/usuarios")
 def criar_usuario():
+  """Cria usuário via API, exigindo uma sessão autenticada."""
   negado = _api_auth()
   if negado:
     return negado
@@ -158,6 +173,7 @@ def criar_usuario():
 
 @api.post("/obras")
 def criar_obra():
+  """Cria obra e associa o usuário autenticado como autor."""
   negado = _api_auth()
   if negado:
     return negado
@@ -172,6 +188,7 @@ def criar_obra():
 
 @api.post("/capitulos")
 def criar_capitulo():
+  """Cria capítulo após validar a propriedade da obra."""
   negado = _api_auth()
   if negado:
     return negado
@@ -184,11 +201,12 @@ def criar_capitulo():
     return _erro(str(e))
 
 
-# ── API — Minhas obras / meus capítulos (protegido) ─────────────────────────
+# ── API protegida: dados pertencentes ao usuário atual ────────────────────────
 
 
 @api.get("/minhas_obras")
 def get_minhas_obras():
+  """Retorna apenas as obras criadas pelo usuário da sessão."""
   negado = _api_auth()
   if negado:
     return negado
@@ -202,6 +220,7 @@ def get_minhas_obras():
 
 @api.get("/meus_capitulos")
 def get_meus_capitulos():
+  """Retorna capítulos associados às obras do usuário da sessão."""
   negado = _api_auth()
   if negado:
     return negado
@@ -214,11 +233,12 @@ def get_meus_capitulos():
     return fk.jsonify([])
 
 
-# ── Registro público na tela de login
+# ── Registro público a partir da tela de login ────────────────────────────────
 
 
 @paginas.post("/register")
 def register_post():
+  """Cadastra uma conta e inicia a sessão após o registro."""
   if "usuario_id" in fk.session:
     return fk.redirect(fk.url_for("paginas.painel"))
   nome = (fk.request.form.get("nome") or "").strip()
@@ -236,10 +256,11 @@ def register_post():
   return fk.redirect(fk.url_for("paginas.painel"))
 
 
-# ── API — Upload de PDF (protegido) ──────────────────────────────────────────
+# ── API protegida para envio e registro de PDF ────────────────────────────────
 
 @api.post("/upload_pdf")
 def upload_pdf():
+  """Envia PDF ao Cloudinary e registra sua URL vinculada à obra/capítulo."""
   negado = _api_auth()
   if negado:
     return negado
@@ -255,12 +276,14 @@ def upload_pdf():
   if not obra_id:
     return _erro("O campo 'obra_id' é obrigatório.")
 
+  # Converte o identificador antes do upload para rejeitar entradas inválidas.
   try:
     obra_id_int = int(obra_id)
   except ValueError:
     return _erro("'obra_id' deve ser um número inteiro.")
 
   try:
+    # Faz upload do fluxo recebido e pede ao Cloudinary uma URL HTTPS pública.
     resultado = cloudinary.uploader.upload(
       arquivo.stream,
       resource_type="image",
@@ -274,6 +297,7 @@ def upload_pdf():
     return _erro(f"Falha no upload para o Cloudinary: {e}", 502)
 
   try:
+    # Persiste a URL retornada e, se presente, associa o PDF a um capítulo.
     dados_pdf = {"url": url_pdf, "obra_id": obra_id_int}
     if capitulo_id:
       dados_pdf["capitulo_id"] = int(capitulo_id)

@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkHub</title>
   <style>
+    /* Normaliza o tamanho dos elementos e remove as margens padrão do navegador. */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Define a base visual da página e organiza o conteúdo em coluna. */
     body {
       font-family: system-ui, sans-serif;
       background: #0f0f13;
@@ -16,7 +18,7 @@
       flex-direction: column;
     }
 
-    /* ── Topo ── */
+    /* ── Cabeçalho e acesso à conta ── */
     .topo {
       display: flex;
       align-items: center;
@@ -47,7 +49,7 @@
     .btn-login:hover { background: #6d28d9; }
     .btn-login svg { width: 16px; height: 16px; }
 
-    /* ── Layout principal ── */
+    /* ── Estrutura geral do catálogo ── */
     .container {
       display: grid;
       grid-template-columns: 300px 1fr;
@@ -55,7 +57,7 @@
       overflow: hidden;
     }
 
-    /* ── Sidebar — lista de obras ── */
+    /* ── Lista de obras e aparência dos cards ── */
     .sidebar {
       background: #16161f;
       border-right: 1px solid #2a2a3a;
@@ -106,14 +108,14 @@
       border-radius: 99px;
     }
 
-    /* ── Painel direito ── */
+    /* ── Painel de detalhes da obra selecionada ── */
     .painel {
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    /* estado vazio */
+    /* Mensagem exibida antes da escolha de uma obra. */
     .placeholder {
       flex: 1;
       display: flex;
@@ -162,7 +164,7 @@
     }
     .aba-obra.ativa { color: #a78bfa; border-bottom-color: #7c3aed; }
 
-    /* lista de capítulos */
+    /* Lista rolável de capítulos e destaque do número de cada capítulo. */
     .cap-lista {
       flex: 1;
       overflow-y: auto;
@@ -191,7 +193,7 @@
     }
     .cap-titulo { font-size: .9rem; color: #d1d5db; }
 
-    /* PDF viewer */
+    /* ── Leitor de PDF ── */
     .pdf-viewer {
       flex: 1;
       display: none;
@@ -201,6 +203,19 @@
     }
     .pdf-viewer.active {
       display: flex;
+    }
+    /* Impede a rolagem da página quando o leitor cobre a tela inteira. */
+    body.leitor-aberto { overflow: hidden; }
+    /* Sobrepõe o catálogo com o leitor e ocupa toda a área visível do navegador. */
+    .pdf-viewer.fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      background: #111214;
     }
     .pdf-barra {
       padding: .75rem 1.15rem;
@@ -212,6 +227,28 @@
       gap: .75rem;
       flex-wrap: wrap;
     }
+    .pdf-voltar {
+      background: #e94e35 !important;
+      border-radius: 6px !important;
+      font-weight: 700;
+    }
+    .pdf-voltar:hover { background: #d9432c !important; }
+    /* O iframe precisa poder encolher dentro do flex para preencher a altura restante. */
+    .pdf-reader-shell { min-height: 0; }
+    .pdf-viewer.fullscreen .pdf-reader-shell { padding: .5rem; }
+    .pdf-viewer.fullscreen .pdf-frame { border-radius: 4px; }
+    /* Estado alternativo do leitor quando a obra ainda não possui arquivo PDF. */
+    .pdf-sem-arquivo {
+      display: none;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: #b7b7ba;
+      text-align: center;
+    }
+    .pdf-sem-arquivo.visivel { display: flex; }
+    /* Agrupa título e descrição do arquivo na barra superior do leitor. */
     .pdf-info {
       display: flex;
       flex-direction: column;
@@ -248,6 +285,7 @@
       cursor: not-allowed;
       background: #2a2a3a;
     }
+    /* Reserva a área flexível para o documento e mantém o iframe dentro dela. */
     .pdf-reader-shell {
       flex: 1;
       overflow: hidden;
@@ -269,18 +307,304 @@
       padding: 2rem 0;
     }
 
-    /* scrollbar sutil */
+    /* Aparência discreta das barras de rolagem em navegadores compatíveis. */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+
+    /* ── Tema do catálogo público ── */
+    /* Ajusta o fundo, a paleta e o cabeçalho fixo do catálogo. */
+    body { background: #111214; color: #f1f1f1; }
+    .topo {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      min-height: 68px;
+      padding: .75rem max(1.25rem, calc((100% - 1240px) / 2));
+      background: rgba(20, 21, 23, .96);
+      border-bottom: 1px solid #303236;
+      backdrop-filter: blur(12px);
+    }
+    .topo h1 { font-size: 1.55rem; letter-spacing: -.06em; }
+    .topo .logo-dot { color: #f05a3e; }
+    .topo-nav { display: flex; align-items: center; gap: 1.35rem; }
+    .topo-nav a {
+      color: #b6b7ba;
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 600;
+      transition: color .15s;
+    }
+    .topo-nav a:hover, .topo-nav a.ativa { color: #fff; }
+    .btn-login { background: #e94e35; border-radius: 6px; }
+    .btn-login:hover { background: #d9432c; }
+    /* Centraliza o conteúdo em uma largura confortável para telas grandes. */
+    .container.catalogo {
+      display: block;
+      width: min(1240px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      overflow: visible;
+    }
+    /* Banner de apresentação, com área decorativa e busca integrada. */
+    .catalogo-hero {
+      position: relative;
+      overflow: hidden;
+      margin: 1.6rem 0 2rem;
+      padding: clamp(1.5rem, 5vw, 3.25rem);
+      border: 1px solid #3d2927;
+      border-radius: 12px;
+      background:
+        radial-gradient(ellipse at 82% 50%, rgba(233, 78, 53, .24), transparent 40%),
+        linear-gradient(120deg, #211d1c, #19191b 65%);
+    }
+    .catalogo-hero::after {
+      content: "漫";
+      position: absolute;
+      right: 8%;
+      top: 50%;
+      transform: translateY(-55%) rotate(-12deg);
+      color: rgba(240, 90, 62, .13);
+      font-size: clamp(8rem, 22vw, 17rem);
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+    }
+    /* Texto do banner fica acima do grafismo de fundo. */
+    .hero-conteudo { position: relative; z-index: 1; max-width: 620px; }
+    .hero-etiqueta {
+      color: #ff886e;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .catalogo-hero h2 {
+      margin: .55rem 0 .65rem;
+      color: #fff;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      letter-spacing: -.045em;
+    }
+    .catalogo-hero p { color: #b4b1b0; line-height: 1.65; max-width: 520px; }
+    .catalogo-hero .hero-busca {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      width: min(480px, 100%);
+      margin-top: 1.35rem;
+      padding: .3rem .85rem;
+      background: #111214;
+      border: 1px solid #454448;
+      border-radius: 7px;
+    }
+    .hero-busca svg { width: 19px; height: 19px; color: #999; flex-shrink: 0; }
+    /* Campo de busca do catálogo, visualmente integrado ao banner. */
+    #busca {
+      width: 100%;
+      padding: .65rem 0;
+      color: #f1f1f1;
+      background: transparent;
+      border: 0;
+      font-size: .92rem;
+    }
+    #busca:focus { outline: none; }
+    /* A antiga coluna lateral passa a funcionar como seção de catálogo em grade. */
+    .sidebar {
+      display: block;
+      overflow: visible;
+      background: transparent;
+      border: 0;
+    }
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 0 1rem;
+      border: 0;
+    }
+    .sidebar-header h2 { margin: 0; color: #f5f5f5; font-size: 1.25rem; }
+    .sidebar-header .hero-busca { display: none; }
+    #status-obras { min-height: 1.3rem; padding: 0 0 .65rem; color: #a4a5a8; }
+    /* Distribui os cards em colunas responsivas conforme o espaço disponível. */
+    #lista-obras {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+      gap: 1.15rem;
+      padding: 0 0 2rem;
+      overflow: visible;
+    }
+    /* Card individual com capa ilustrativa, título, autor e categoria. */
+    .obra-card {
+      min-width: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #1b1c1f;
+      border: 1px solid #303236;
+      border-radius: 8px;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .obra-card:hover, .obra-card.ativa {
+      transform: translateY(-4px);
+      border-color: #e94e35;
+      background: #1b1c1f;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+    }
+    .obra-card:focus-visible { outline: 2px solid #ff886e; outline-offset: 3px; }
+    /* Capa abstrata gerada por CSS para obras que não possuem imagem cadastrada. */
+    .obra-capa {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 75% 22%, rgba(255,255,255,.2), transparent 25%),
+        linear-gradient(145deg, color-mix(in srgb, var(--capa-cor), #171719 30%), #171719 78%);
+    }
+    .obra-capa::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(255,255,255,.2);
+      transform: rotate(-4deg);
+    }
+    .obra-capa::after {
+      content: "";
+      position: absolute;
+      width: 130%;
+      height: 35%;
+      bottom: 8%;
+      left: -15%;
+      background: rgba(10,10,12,.32);
+      transform: rotate(-18deg);
+    }
+    .obra-capa-letra {
+      z-index: 1;
+      color: rgba(255,255,255,.9);
+      font-family: Georgia, serif;
+      font-size: clamp(3.2rem, 7vw, 5.5rem);
+      font-weight: 800;
+      text-shadow: 0 5px 25px rgba(0,0,0,.4);
+    }
+    .obra-capa-selo {
+      position: absolute;
+      z-index: 2;
+      left: 12px;
+      bottom: 12px;
+      color: rgba(255,255,255,.78);
+      font-size: .58rem;
+      font-weight: 800;
+      letter-spacing: .2em;
+    }
+    /* Limita o título a duas linhas e evita que nomes longos quebrem a grade. */
+    .obra-card-info { padding: .75rem .8rem .85rem; }
+    .obra-card-info .titulo {
+      display: -webkit-box;
+      overflow: hidden;
+      color: #f1f1f1;
+      font-size: .92rem;
+      line-height: 1.35;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .obra-card-info .autor {
+      overflow: hidden;
+      margin-top: .35rem;
+      color: #a2a3a6;
+      font-size: .78rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .obra-card .badge {
+      margin-top: .6rem;
+      padding: .2rem .5rem;
+      color: #ff9a84;
+      background: #42251f;
+      border-radius: 4px;
+      font-size: .68rem;
+    }
+    /* Estilos para a mensagem inicial e para os detalhes da obra/capítulos. */
+    .painel { overflow: visible; }
+    .placeholder {
+      min-height: 145px;
+      margin: 0 0 2rem;
+      padding: 1.25rem;
+      color: #aaa;
+      background: #191a1d;
+      border: 1px solid #303236;
+      border-radius: 8px;
+    }
+    .placeholder svg { display: none; }
+    .placeholder p { color: #e7e7e7; font-weight: 700; }
+    .placeholder small { color: #9c9da0; }
+    .obra-detalhe {
+      height: auto;
+      margin: 0 0 2rem;
+      overflow: hidden;
+      background: #191a1d;
+      border: 1px solid #303236;
+      border-radius: 9px;
+    }
+    .obra-detalhe-header { padding: 1.25rem 1.4rem; background: #202124; }
+    .obra-detalhe-header h2 { color: #fff; font-size: 1.35rem; }
+    .obra-detalhe-header p { color: #b0b1b4; }
+    .abas-obra { background: #191a1d; border-color: #303236; }
+    .aba-obra { color: #a5a6a8; }
+    .aba-obra.ativa { color: #ff886e; border-bottom-color: #e94e35; }
+    .cap-lista { padding: .8rem 1.2rem 1.2rem; }
+    .cap-item { background: #202124; border-color: #303236; cursor: pointer; }
+    .cap-item:hover { border-color: #e94e35; }
+    .cap-num { color: #ff9a84; background: #42251f; }
+    .cap-titulo { color: #e2e2e2; }
+    /* Harmoniza a barra de ferramentas do leitor com o restante do catálogo. */
+    .pdf-barra { background: #202124; border-color: #303236; }
+    .pdf-controles button:hover { background: #e94e35; }
+    .pdf-reader-shell { background: #111214; }
+    .pdf-viewer.fullscreen .pdf-barra { padding: .65rem 1rem; }
+    .pdf-viewer.fullscreen .pdf-controles { justify-content: flex-end; }
+    /* Reorganiza a barra de controles quando a tela é estreita. */
+    @media (max-width: 768px) {
+      .pdf-viewer.fullscreen .pdf-barra { padding: .6rem; }
+      .pdf-viewer.fullscreen .pdf-info { width: auto; }
+      .pdf-viewer.fullscreen .pdf-controles { width: 100%; }
+      .pdf-viewer.fullscreen .pdf-controles button { flex: 1 1 auto; }
+    }
+    /* Ajustes de navegação, grade e espaçamento para tablets e celulares. */
+    @media (max-width: 768px) {
+      .container.catalogo { width: min(100% - 1.5rem, 1240px); }
+      .topo { padding: .7rem .85rem; }
+      .topo-nav { gap: .65rem; }
+      .topo-nav a { font-size: .8rem; }
+      .catalogo-hero { margin: 1rem 0 1.5rem; }
+      #lista-obras { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .8rem; }
+      .obra-capa { aspect-ratio: 3 / 4; }
+      .obra-detalhe { min-height: 0; }
+      .obra-detalhe-header { padding: 1rem; }
+    }
+    /* Em celulares menores, mantém duas capas por linha e reduz os botões do topo. */
+    @media (max-width: 420px) {
+      .topo { gap: .45rem; }
+      .topo h1 { font-size: 1.3rem; }
+      .topo-nav { gap: .5rem; }
+      .topo-nav a { font-size: .74rem; }
+      .btn-login { padding: .45rem .6rem; font-size: .8rem; }
+      .btn-login svg { display: none; }
+      #lista-obras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
   </style>
+  <!-- Regras compartilhadas com as demais telas em dispositivos menores. -->
   <link rel="stylesheet" href="{{ url_for('static', filename='responsive.css') }}" />
 </head>
 <body>
 
-<!-- ── Topo ── -->
+<!-- Cabeçalho com a marca, atalhos de navegação e acesso à tela de login. -->
 <header class="topo">
   <h1>Ink<span class="logo-dot">Hub</span></h1>
+  <nav class="topo-nav" aria-label="Navegação principal">
+    <a class="ativa" href="#inicio">Início</a>
+    <a href="#catalogo">Catálogo</a>
+  </nav>
   <a href="/login" class="btn-login">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
@@ -291,33 +615,47 @@
   </a>
 </header>
 
-<!-- ── Layout ── -->
-<div class="container">
+<!-- Conteúdo principal do catálogo: banner de busca, obras e painel de leitura. -->
+<div class="container catalogo" id="inicio">
+  <!-- Destaque inicial do site e campo usado para filtrar as obras. -->
+  <section class="catalogo-hero" aria-labelledby="hero-titulo">
+    <div class="hero-conteudo">
+      <span class="hero-etiqueta">Seu próximo universo começa aqui</span>
+      <h2 id="hero-titulo">Histórias que viram vício.</h2>
+      <p>Explore o catálogo, descubra novas obras e acompanhe seus capítulos favoritos em um só lugar.</p>
+      <label class="hero-busca">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-4-4"></path>
+        </svg>
+        <input id="busca" type="search" placeholder="Buscar por título..." autocomplete="off" aria-label="Buscar obras" />
+      </label>
+    </div>
+  </section>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
+  <!-- A lista é preenchida pelo JavaScript com os dados da API de obras. -->
+  <aside class="sidebar" id="catalogo">
     <div class="sidebar-header">
-      <h2>Obras disponíveis</h2>
-      <input id="busca" type="search" placeholder="Buscar obra…" autocomplete="off" />
+      <h2>Explore o catálogo</h2>
     </div>
     <div id="status-obras">Carregando…</div>
     <div id="lista-obras"></div>
   </aside>
 
-  <!-- Painel direito -->
+  <!-- Área que mostra uma mensagem inicial ou os detalhes da obra selecionada. -->
   <main class="painel" id="painel">
 
-    <!-- Placeholder inicial -->
+    <!-- Estado inicial do painel, mostrado antes de abrir o leitor. -->
     <div class="placeholder" id="placeholder">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
       </svg>
-      <p>Selecione uma obra para começar a ler</p>
-      <small>Escolha na lista ao lado</small>
+      <p>Escolha uma obra para ver seus capítulos</p>
+      <small>Seu próximo mangá favorito pode estar a um clique.</small>
     </div>
 
-    <!-- Detalhe da obra (oculto até selecionar) -->
+    <!-- Detalhes e capítulos da obra; permanecem ocultos até serem necessários. -->
     <div class="obra-detalhe" id="obra-detalhe" style="display:none">
       <div class="obra-detalhe-header">
         <h2 id="detalhe-titulo"></h2>
@@ -327,12 +665,12 @@
         <button class="aba-obra ativa" data-aba="capitulos">Capítulos</button>
       </div>
 
-      <!-- Capítulos -->
+      <!-- Lista de capítulos carregada a partir da API. -->
       <div class="cap-lista" id="aba-capitulos">
         <div id="lista-caps"></div>
       </div>
 
-      <!-- PDF Viewer -->
+      <!-- Leitor em tela cheia, com retorno ao catálogo e controles de página. -->
       <div class="pdf-viewer" id="pdf-viewer">
         <div class="pdf-barra">
           <div class="pdf-info">
@@ -340,15 +678,18 @@
             <span id="pdf-meta">Selecione um capítulo para ler</span>
           </div>
           <div class="pdf-controles">
+            <button type="button" class="pdf-voltar" id="voltar-obras">← Voltar às obras</button>
             <button type="button" id="voltar-pagina" disabled>← Voltar</button>
             <span id="pdf-pagina-info">Página 1</span>
             <button type="button" id="avancar-pagina">Avançar →</button>
             <button type="button" id="pdf-link-externo">Abrir PDF</button>
-            <button type="button" id="fechar-pdf">✕ Fechar</button>
           </div>
         </div>
-        <div class="pdf-reader-shell">
+        <div class="pdf-reader-shell" id="pdf-reader-shell">
           <iframe class="pdf-frame" id="pdf-frame" src="" title="Leitor de PDF" allow="fullscreen"></iframe>
+        </div>
+        <div class="pdf-sem-arquivo" id="pdf-sem-arquivo" role="status">
+          Não há PDF disponível para esta obra. Use “Voltar às obras” para retornar ao catálogo.
         </div>
       </div>
     </div>
@@ -357,66 +698,131 @@
 </div>
 
 <script>
-/* ── util ── */
+/* Atalhos para selecionar elementos pelo ID ou por um seletor CSS. */
 const $  = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 
-/* ── estado ── */
+/* Guarda a obra atual, os cards para busca e o estado do PDF aberto. */
 let obraAtual = null;
 let todosObraCards = [];
 let currentPdfUrl = null;
 let paginaAtual = 1;
 
 function atualizarControlesPdf() {
+  // Atualiza o indicador da página e desativa "voltar" na primeira página.
   const totalInfo = paginaAtual > 1 ? `Página ${paginaAtual}` : "Página 1";
   $("pdf-pagina-info").textContent = totalInfo;
   $("voltar-pagina").disabled = paginaAtual <= 1;
 }
 
 function abrirPdfNaTela(url) {
+  // Monta a URL do visualizador do Google e troca a página para o modo de leitura.
   currentPdfUrl = url;
   paginaAtual = 1;
   const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true#page=1`;
+  $("pdf-sem-arquivo").classList.remove("visivel");
+  $("pdf-reader-shell").style.display = "block";
+  $("pdf-viewer").classList.add("active", "fullscreen");
+  document.body.classList.add("leitor-aberto");
   $("pdf-frame").src = viewerUrl;
   atualizarControlesPdf();
 }
 
-/* ── carregar obras ── */
+function abrirLeitorSemPdf(titulo, mensagem) {
+  // Usa o mesmo leitor em tela cheia para comunicar falhas ou ausência de arquivo.
+  currentPdfUrl = null;
+  $("pdf-nome").textContent = titulo;
+  $("pdf-meta").textContent = mensagem;
+  $("pdf-frame").src = "";
+  $("pdf-reader-shell").style.display = "none";
+  $("pdf-sem-arquivo").classList.add("visivel");
+  $("pdf-viewer").classList.add("active", "fullscreen");
+  document.body.classList.add("leitor-aberto");
+}
+
+/* Busca as obras no backend e constrói seus cards sem inserir texto HTML da API. */
 async function carregarObras() {
   try {
-    const obras = await fetch("/api/obras").then(r => r.json());
+    const resposta = await fetch("/api/obras");
+    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+    const obras = await resposta.json();
     const lista = $("lista-obras");
-    $("status-obras").textContent = obras.length ? "" : "Nenhuma obra cadastrada.";
+    lista.innerHTML = "";
     todosObraCards = [];
 
     obras.forEach(o => {
+      // O card funciona com mouse e teclado para continuar acessível.
       const card = document.createElement("div");
       card.className = "obra-card";
       card.dataset.id    = o.id;
-      card.dataset.titulo = o.titulo.toLowerCase();
-      card.innerHTML = `
-        <div class="titulo">${o.titulo}</div>
-        <div class="autor">${o.autor || "—"}</div>
-        ${o.categoria ? `<span class="badge">${o.categoria}</span>` : ""}
-      `;
+      card.dataset.titulo = (o.titulo || "").toLocaleLowerCase("pt-BR");
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Abrir ${o.titulo}`);
+
+      const capa = document.createElement("div");
+      capa.className = "obra-capa";
+      // A cor depende do título, mantendo a capa abstrata consistente entre visitas.
+      const hash = [...String(o.titulo || "I")].reduce((total, letra) => total + letra.charCodeAt(0), 0);
+      capa.style.setProperty("--capa-cor", `hsl(${hash % 360} 48% 42%)`);
+      const inicial = document.createElement("span");
+      inicial.className = "obra-capa-letra";
+      inicial.textContent = (o.titulo || "I").trim().charAt(0).toUpperCase();
+      const selo = document.createElement("span");
+      selo.className = "obra-capa-selo";
+      selo.textContent = "INKHUB";
+      capa.append(inicial, selo);
+
+      const info = document.createElement("div");
+      info.className = "obra-card-info";
+      const titulo = document.createElement("div");
+      titulo.className = "titulo";
+      titulo.textContent = o.titulo || "Sem título";
+      const autor = document.createElement("div");
+      autor.className = "autor";
+      autor.textContent = o.autor || "Autor desconhecido";
+      info.append(titulo, autor);
+      if (o.categoria) {
+        const categoria = document.createElement("span");
+        categoria.className = "badge";
+        categoria.textContent = o.categoria;
+        info.appendChild(categoria);
+      }
+      // Registra o card no DOM e na lista usada pelo filtro de busca.
+      card.append(capa, info);
       card.addEventListener("click", () => selecionarObra(card, o));
+      card.addEventListener("keydown", evento => {
+        if (evento.key === "Enter" || evento.key === " ") {
+          evento.preventDefault();
+          selecionarObra(card, o);
+        }
+      });
       lista.appendChild(card);
       todosObraCards.push(card);
     });
+    $("status-obras").textContent = obras.length
+      ? `${obras.length} ${obras.length === 1 ? "obra disponível" : "obras disponíveis"}`
+      : "Nenhuma obra cadastrada.";
   } catch (e) {
-    $("status-obras").textContent = "Erro ao carregar obras.";
+    $("status-obras").textContent = `Erro ao carregar obras: ${e.message}`;
   }
 }
 
-/* ── busca ── */
+/* Filtra títulos sem diferenciar maiúsculas de minúsculas e atualiza o contador. */
 $("busca").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
+  const q = e.target.value.toLocaleLowerCase("pt-BR");
+  let encontrados = 0;
   todosObraCards.forEach(c => {
-    c.style.display = c.dataset.titulo.includes(q) ? "" : "none";
+    const corresponde = c.dataset.titulo.includes(q);
+    c.style.display = corresponde ? "" : "none";
+    if (corresponde) encontrados += 1;
   });
+  $("status-obras").textContent = encontrados
+    ? `${encontrados} ${encontrados === 1 ? "obra encontrada" : "obras encontradas"}`
+    : "Nenhuma obra encontrada.";
 });
 
-/* ── selecionar obra ── */
+/* Seleciona o card, carrega capítulos e procura um PDF para iniciar a leitura. */
 async function selecionarObra(card, obra) {
   $$(".obra-card").forEach(c => c.classList.remove("ativa"));
   card.classList.add("ativa");
@@ -430,15 +836,46 @@ async function selecionarObra(card, obra) {
     .filter(Boolean).join(" · ");
 
   ativarAba("capitulos");
-  await carregarCaps(obra.id);
+  $("pdf-nome").textContent = obra.titulo;
+  $("pdf-meta").textContent = "Carregando PDF…";
+  try {
+    // Carrega capítulos e arquivos em paralelo para reduzir o tempo de espera.
+    const [capitulos, respostaPdfs] = await Promise.all([
+      carregarCaps(obra.id),
+      fetch("/api/pdf_urls"),
+    ]);
+    if (!respostaPdfs.ok) throw new Error(`HTTP ${respostaPdfs.status}`);
+    const pdfs = await respostaPdfs.json();
+    const pdfsDaObra = pdfs.filter(pdf => String(pdf.obra_id) === String(obra.id));
+    // Prioriza o PDF geral; sem ele, escolhe o primeiro PDF associado a um capítulo.
+    const pdfDaObra = pdfsDaObra.find(pdf => pdf.capitulo_id === null || pdf.capitulo_id === undefined)
+      || capitulos.map(capitulo =>
+        pdfsDaObra.find(pdf => String(pdf.capitulo_id) === String(capitulo.id))
+      ).find(Boolean)
+      || pdfsDaObra[0];
+
+    if (pdfDaObra) {
+      abrirPdfNaTela(pdfDaObra.url);
+      $("pdf-nome").textContent = obra.titulo;
+      $("pdf-meta").textContent = "Leitura da obra";
+    } else {
+      abrirLeitorSemPdf(
+        obra.titulo,
+        "Nenhum PDF foi cadastrado para esta obra ou para seus capítulos."
+      );
+    }
+  } catch (erro) {
+    abrirLeitorSemPdf(obra.titulo, `Não foi possível carregar o PDF: ${erro.message}`);
+  }
 }
 
-/* ── abas ── */
+/* Conecta os botões de aba ao alternador de conteúdo da obra. */
 $$(".aba-obra").forEach(btn => {
   btn.addEventListener("click", () => ativarAba(btn.dataset.aba));
 });
 
 function ativarAba(nome) {
+  // Marca a aba selecionada e exibe sua lista de capítulos.
   $$(".aba-obra").forEach(b => b.classList.toggle("ativa", b.dataset.aba === nome));
   const caps = $("aba-capitulos");
   if (nome === "capitulos") {
@@ -448,37 +885,53 @@ function ativarAba(nome) {
   }
 }
 
-/* ── capítulos ── */
+/* Busca capítulos da obra, ordena por número e cria uma opção de leitura acessível. */
 async function carregarCaps(obraId) {
   const lista = $("lista-caps");
-  lista.innerHTML = "<p style='color:#6b7280;font-size:.85rem'>Carregando…</p>";
-  try {
-    const todos = await fetch("/api/capitulos").then(r => r.json());
-    const caps  = todos.filter(c => c.obra_id === obraId)
-                       .sort((a, b) => a.numero - b.numero);
-    if (!caps.length) {
-      lista.innerHTML = "<p style='color:#6b7280;font-size:.85rem;padding:.5rem 0'>Nenhum capítulo cadastrado.</p>";
-      return;
-    }
-    lista.innerHTML = caps.map(c => `
-      <div class="cap-item" data-capitulo-id="${c.id}" data-numero="${c.numero}" data-titulo="${c.titulo}">
-        <span class="cap-num">Cap. ${c.numero}</span>
-        <span class="cap-titulo">${c.titulo}</span>
-      </div>
-    `).join("");
-
-    $$(".cap-item").forEach(item => {
-      item.addEventListener("click", () => abrirPdfCapitulo(item.dataset.capituloId, item.dataset.numero, item.dataset.titulo));
-    });
-  } catch {
-    lista.innerHTML = "<p style='color:#f87171;font-size:.85rem'>Erro ao carregar capítulos.</p>";
+  lista.textContent = "Carregando capítulos…";
+  const resposta = await fetch("/api/capitulos");
+  if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+  const todos = await resposta.json();
+  // A API retorna capítulos de todas as obras; filtra pela obra selecionada.
+  const caps = todos.filter(c => String(c.obra_id) === String(obraId))
+    .sort((a, b) => a.numero - b.numero);
+  if (!caps.length) {
+    lista.textContent = "Nenhum capítulo cadastrado.";
+    return caps;
   }
+  lista.innerHTML = "";
+  caps.forEach(capitulo => {
+    const item = document.createElement("div");
+    item.className = "cap-item";
+    item.tabIndex = 0;
+    item.setAttribute("role", "button");
+    item.setAttribute("aria-label", `Ler capítulo ${capitulo.numero}: ${capitulo.titulo}`);
+    const numero = document.createElement("span");
+    numero.className = "cap-num";
+    numero.textContent = `Cap. ${capitulo.numero}`;
+    const titulo = document.createElement("span");
+    titulo.className = "cap-titulo";
+    titulo.textContent = capitulo.titulo;
+    item.append(numero, titulo);
+    const abrir = () => abrirPdfCapitulo(capitulo.id, capitulo.numero, capitulo.titulo);
+    item.addEventListener("click", abrir);
+    item.addEventListener("keydown", evento => {
+      if (evento.key === "Enter" || evento.key === " ") {
+        evento.preventDefault();
+        abrir();
+      }
+    });
+    lista.appendChild(item);
+  });
+  return caps;
 }
 
-/* ── PDF do capítulo ── */
+/* Abre o PDF do capítulo escolhido ou usa o PDF geral da obra como alternativa. */
 async function abrirPdfCapitulo(capituloId, numero, titulo) {
   try {
-    const todosPdfs = await fetch("/api/pdf_urls").then(r => r.json());
+    const resposta = await fetch("/api/pdf_urls");
+    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+    const todosPdfs = await resposta.json();
 
     let pdf = todosPdfs.find(p => String(p.capitulo_id) === String(capituloId));
     if (!pdf && obraAtual) {
@@ -492,31 +945,47 @@ async function abrirPdfCapitulo(capituloId, numero, titulo) {
 
     $("pdf-nome").textContent = `Cap. ${numero} - ${titulo}`;
     $("pdf-meta").textContent = "Use os botões para passar as páginas";
-    $("aba-capitulos").style.display = "none";
-    $("pdf-viewer").classList.add("active");
     abrirPdfNaTela(pdf.url);
-  } catch {
-    alert("Erro ao carregar PDF.");
+  } catch (erro) {
+    abrirLeitorSemPdf(`Cap. ${numero} - ${titulo}`, `Não foi possível carregar o PDF: ${erro.message}`);
   }
 }
 
-/* ── fechar PDF ── */
-$("fechar-pdf").addEventListener("click", () => {
+/* Fecha o modo de leitura e devolve o usuário à seção do catálogo. */
+function voltarParaObras() {
   $("pdf-viewer").classList.remove("active");
-  $("aba-capitulos").style.display = "block";
+  $("pdf-viewer").classList.remove("fullscreen");
+  document.body.classList.remove("leitor-aberto");
   $("pdf-frame").src = "";
+  $("pdf-reader-shell").style.display = "";
+  $("pdf-sem-arquivo").classList.remove("visivel");
   currentPdfUrl = null;
   paginaAtual = 1;
   atualizarControlesPdf();
+  $("pdf-nome").textContent = "—";
+  $("pdf-meta").textContent = "Selecione um capítulo para ler";
+  $("obra-detalhe").style.display = "none";
+  $("placeholder").style.display = "flex";
+  document.getElementById("catalogo").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Permite retornar com Escape, além do botão visível na barra do leitor.
+$("voltar-obras").addEventListener("click", voltarParaObras);
+document.addEventListener("keydown", evento => {
+  if (evento.key === "Escape" && $("pdf-viewer").classList.contains("fullscreen")) {
+    voltarParaObras();
+  }
 });
 
 $("pdf-link-externo").addEventListener("click", () => {
+  // Abre o arquivo original em outra aba, se houver um PDF carregado.
   if (currentPdfUrl) {
     window.open(currentPdfUrl, "_blank");
   }
 });
 
 $("voltar-pagina").addEventListener("click", () => {
+  // Recarrega o visualizador apontando para a página anterior.
   if (currentPdfUrl && paginaAtual > 1) {
     paginaAtual -= 1;
     $("pdf-frame").src = `https://docs.google.com/viewer?url=${encodeURIComponent(currentPdfUrl)}&embedded=true#page=${paginaAtual}`;
@@ -525,6 +994,7 @@ $("voltar-pagina").addEventListener("click", () => {
 });
 
 $("avancar-pagina").addEventListener("click", () => {
+  // O total de páginas é desconhecido; o leitor permite avançar enquanto houver PDF.
   if (currentPdfUrl) {
     paginaAtual += 1;
     $("pdf-frame").src = `https://docs.google.com/viewer?url=${encodeURIComponent(currentPdfUrl)}&embedded=true#page=${paginaAtual}`;
@@ -532,6 +1002,7 @@ $("avancar-pagina").addEventListener("click", () => {
   }
 });
 
+// Inicia o catálogo assim que o navegador executa o script no final da página.
 carregarObras();
 </script>
 </body>

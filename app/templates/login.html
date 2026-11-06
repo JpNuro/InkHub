@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkHub — Entrar</title>
   <style>
+    /* Normaliza dimensões e margens para manter o layout consistente. */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Centraliza o cartão de autenticação na janela. */
     body {
       font-family: system-ui, sans-serif;
       background: #0f0f13;
@@ -18,7 +20,7 @@
       justify-content: center;
     }
 
-    /* marca d'água de fundo */
+    /* Marca d'água decorativa que não bloqueia interações com o formulário. */
     body::before {
       content: "";
       position: fixed;
@@ -29,6 +31,7 @@
       pointer-events: none;
     }
 
+    /* Cartão que reúne login e cadastro de conta. */
     .card {
       width: 100%;
       max-width: 380px;
@@ -39,6 +42,7 @@
       position: relative;
     }
 
+    /* Marca e subtítulo da área administrativa. */
     .logo {
       text-align: center;
       margin-bottom: 2rem;
@@ -47,6 +51,7 @@
     .logo h1 span { color: #7c3aed; }
     .logo p { font-size: .85rem; color: #6b7280; margin-top: .3rem; }
 
+    /* Campos comuns aos formulários de login e registro. */
     .campo {
       margin-bottom: 1.1rem;
     }
@@ -75,6 +80,7 @@
       border-color: #ef4444;
     }
 
+    /* Botão sobreposto ao campo de senha para alternar sua visibilidade. */
     .senha-wrapper {
       position: relative;
     }
@@ -97,6 +103,7 @@
     }
     .toggle-senha:hover { color: #9ca3af; }
 
+    /* Ação principal de envio dos formulários. */
     .btn-entrar {
       width: 100%;
       background: #7c3aed;
@@ -113,6 +120,7 @@
     .btn-entrar:hover { background: #6d28d9; }
     .btn-entrar:active { transform: scale(.98); }
 
+    /* Mensagem renderizada pelo servidor quando a autenticação falha. */
     .erro {
       background: rgba(239,68,68,.12);
       border: 1px solid rgba(239,68,68,.3);
@@ -136,6 +144,7 @@
     }
     .voltar:hover { color: #a78bfa; }
 
+    /* Alternância entre o formulário de login e o de criação de conta. */
     .btn-cadastrar {
       width: 100%;
       background: transparent;
@@ -169,16 +178,19 @@
     }
     .btn-cadastrar-wrapper.hidden { display: none; }
   </style>
+  <!-- Ajustes compartilhados para dispositivos móveis. -->
   <link rel="stylesheet" href="{{ url_for('static', filename='responsive.css') }}" />
 </head>
 <body>
 
+<!-- Cartão principal com formulários de login, registro e retorno ao catálogo. -->
 <div class="card">
   <div class="logo">
     <h1>Ink<span>Hub</span></h1>
     <p>Área administrativa</p>
   </div>
 
+  <!-- O servidor define erro quando as credenciais ou o registro são inválidos. -->
   {% if erro %}
   <div class="erro">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -189,6 +201,7 @@
   </div>
   {% endif %}
 
+  <!-- Formulário tradicional enviado à rota Flask de login. -->
   <form method="POST" action="/login" class="form-login" id="form-login">
     <div class="campo">
       <label for="email">E-mail</label>
@@ -214,10 +227,12 @@
     <button class="btn-entrar" type="submit">Entrar</button>
   </form>
 
+  <!-- A ação alterna para o cadastro sem navegar para outra página. -->
   <div class="btn-cadastrar-wrapper" id="btn-cadastrar-wrapper">
     <button class="btn-cadastrar" type="button" onclick="toggleCadastro()">Cadastrar</button>
   </div>
 
+  <!-- Formulário de criação de usuário enviado à rota /register. -->
   <div class="form-cadastro" id="form-cadastro">
     <form method="POST" action="/register">
       <div class="campo">
@@ -237,10 +252,12 @@
     </form>
   </div>
 
+  <!-- Link de saída da área de autenticação para a página pública. -->
   <a class="voltar" href="/">← Voltar para o catálogo</a>
 </div>
 
 <script>
+// Alterna entre campo de senha oculto e texto e atualiza o ícone do botão.
 function toggleSenha() {
   const senhaInput = document.getElementById('senha');
   const olhoAberto = document.getElementById('olho-aberto');
@@ -257,6 +274,7 @@ function toggleSenha() {
   }
 }
 
+// Exibe o cadastro e oculta login e botão de alternância, ou reverte a ação.
 function toggleCadastro() {
   const formCadastro = document.getElementById('form-cadastro');
   const formLogin = document.getElementById('form-login');

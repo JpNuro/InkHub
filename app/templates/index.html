@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkHub — Painel</title>
   <style>
+    /* Padroniza o modelo de caixa e zera as margens padrão. */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Tokens de cor usados nos componentes do painel. */
     :root {
       --bg:       #0f0f13;
       --surface:  #16161f;
@@ -24,6 +26,7 @@
       --err:      #f87171;
     }
 
+    /* Estrutura de página e cabeçalho do painel administrativo. */
     body {
       font-family: system-ui, sans-serif;
       background: var(--bg);
@@ -70,12 +73,14 @@
     }
     .btn-logout:hover { background: var(--purple-x); color: #fff; }
 
+    /* Alternância entre as telas de cadastro de obras e capítulos. */
     .secao-conteudo { display: none; flex: 1; }
     .secao-conteudo.ativa { display: flex; }
 
     .secao-obras { display: flex; }
     .secao-capitulos { display: none; }
 
+    /* Distribuição em duas colunas para formulário e tabela. */
     .dois-col {
       display: grid;
       grid-template-columns: 340px 1fr;
@@ -92,6 +97,7 @@
     }
     .col-form h2 { font-size: 1rem; color: var(--purple-l); margin-bottom: 1.2rem; }
 
+    /* Campos, validação visual e ações dos formulários. */
     .campo { margin-bottom: 1rem; }
     .campo label {
       display: block;
@@ -135,6 +141,7 @@
     .msg-ok  { color: var(--ok); }
     .msg-err { color: var(--err); }
 
+    /* Tabela de registros e indicador de atualização. */
     .col-tabela {
       display: flex;
       flex-direction: column;
@@ -181,6 +188,7 @@
     tbody tr:hover td { background: var(--surface); }
     .status-tabela { font-size: .85rem; color: var(--dim); }
 
+    /* Área de envio de PDFs: formulário, arrastar arquivo e progresso. */
     .upload-layout {
       display: grid;
       grid-template-columns: 380px 1fr;
@@ -254,6 +262,7 @@
     .msg-upload.ok  { color: var(--ok); }
     .msg-upload.err { color: var(--err); }
 
+    /* Barras de rolagem discretas nas áreas com conteúdo extenso. */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   </style>
@@ -261,7 +270,7 @@
 </head>
 <body>
 
-<!-- Cabeçalho da página (topo) -->
+<!-- Cabeçalho da página, com usuário autenticado, catálogo e saída. -->
 <header class="topo">
   <div class="logo">Ink<span>Hub</span></div>
   <span class="topo-sub">/ Painel admin</span>
@@ -273,7 +282,7 @@
 </header>
 
 
-<!-- SEÇÃO OBRAS -->
+<!-- Seção administrativa para cadastrar obras e listar as já existentes. -->
 <div class="secao-conteudo secao-obras" id="secao-obras">
   <div class="dois-col">
     <div class="col-form">
@@ -310,7 +319,7 @@
   </div>
 </div>
 
-<!-- SEÇÃO CAPÍTULOS -->
+<!-- Seção para cadastrar capítulos, enviar PDFs e consultar registros. -->
 <div class="secao-conteudo secao-capitulos" id="secao-capitulos">
   <div class="dois-col">
     <div class="col-form">
@@ -382,10 +391,13 @@
 </div>
 
 <script>
+// Atalhos para encontrar elementos por ID e por seletor CSS.
 const $  = id  => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
+// Cliente simples para endpoints JSON que respondem com sucesso.
 const api = path => fetch(path).then(r => r.json());
 
+// Mostra uma mensagem de sucesso/erro e valida se o elemento existe no HTML.
 function setMsg(elId, texto, tipo) {
   const el = $(elId);
   if (!el) {
@@ -397,6 +409,7 @@ function setMsg(elId, texto, tipo) {
   el.style.display = "block";
 }
 
+// Alterna entre o cadastro de obras e o gerenciamento dos capítulos.
 $("btn-ir-capitulos").addEventListener("click", () => {
   $("secao-obras").style.display = "none";
   $("secao-capitulos").style.display = "flex";
@@ -409,6 +422,7 @@ $("btn-voltar-obras").addEventListener("click", () => {
 
 let obras = [], capitulos = [];
 
+// Preenche os selects do formulário a partir das obras carregadas.
 function popularSelects() {
   const selObraC = $("c-obra");
   const curObraC = selObraC.value;
@@ -433,6 +447,7 @@ function popularSelects() {
   atualizarBtnUpload();
 }
 
+// Atualiza as opções de capítulo conforme a obra selecionada para upload.
 function atualizarCapitulosPdf() {
   const obraId = $("pdf-obra").value;
   const selCap = $("pdf-capitulo");
@@ -451,6 +466,7 @@ function atualizarCapitulosPdf() {
   selCap.value = curCap;
 }
 
+// Desenha a tabela de obras e o estado vazio quando não há registros.
 function renderObras() {
   const tb = $("tbody-obras");
   $("status-obras").textContent = obras.length ? "" : "Nenhuma obra cadastrada.";
@@ -459,6 +475,7 @@ function renderObras() {
   `).join("");
 }
 
+// Relaciona cada capítulo ao título da obra para exibir a tabela legível.
 function renderCapitulos() {
   const mapaObras = Object.fromEntries(obras.map(o => [o.id, o.titulo]));
   const tb = $("tbody-capitulos");
@@ -474,6 +491,7 @@ function renderCapitulos() {
     `).join("");
 }
 
+// Botões de recarga buscam novamente somente o conjunto solicitado.
 $$("[data-reload]").forEach(btn => {
   btn.addEventListener("click", async () => {
     switch (btn.dataset.reload) {
@@ -487,6 +505,7 @@ $$("[data-reload]").forEach(btn => {
   });
 });
 
+// Valida os campos e cria uma obra pela API autenticada.
 $("btn-obra").addEventListener("click", async () => {
   const titulo = $("o-titulo").value.trim();
   const categoria = $("o-categoria").value.trim();
@@ -528,6 +547,7 @@ $("btn-obra").addEventListener("click", async () => {
   } catch (e) { setMsg("msg-obra", "✗ " + e.message, "err"); }
 });
 
+// Valida a obra/título e cria capítulo; o backend define o número sequencial.
 $("btn-capitulo").addEventListener("click", async () => {
   const obra = $("c-obra").value;
   const titulo = $("c-titulo").value.trim();
@@ -560,11 +580,13 @@ $("btn-capitulo").addEventListener("click", async () => {
   } catch (e) { setMsg("msg-capitulo", "✗ " + e.message, "err"); }
 });
 
+// Estado do arquivo escolhido no controle de upload.
 let arquivoPdf = null;
 
 const dropZone = $("drop-zone");
 const inputPdf = $("input-pdf");
 
+// Permite escolher o PDF pelo seletor nativo ou arrastando-o para a área.
 dropZone.addEventListener("click", () => inputPdf.click());
 dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("over"); });
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("over"));
@@ -583,6 +605,7 @@ $("pdf-obra").addEventListener("change", () => {
   atualizarBtnUpload();
 });
 
+// Atualiza a interface após selecionar um arquivo e libera o botão de envio.
 function definirArquivo(f) {
   arquivoPdf = f;
   const nomeEl = $("nome-arquivo");
@@ -593,16 +616,19 @@ function definirArquivo(f) {
   mostrarMsgUpload("", "");
 }
 
+// Só habilita upload quando arquivo e obra obrigatória foram selecionados.
 function atualizarBtnUpload() {
   $("btn-upload").disabled = !(arquivoPdf && $("pdf-obra").value);
 }
 
+// Apresenta resultado ou progresso textual do envio.
 function mostrarMsgUpload(texto, tipo) {
   const el = $("msg-upload");
   el.textContent = texto;
   el.className   = "msg-upload " + (tipo === "ok" ? "ok" : tipo === "err" ? "err" : "");
 }
 
+// Envia o arquivo e seus vínculos ao endpoint protegido de upload.
 $("btn-upload").addEventListener("click", async () => {
   if (!arquivoPdf || !$("pdf-obra").value) return;
 
@@ -614,11 +640,13 @@ $("btn-upload").addEventListener("click", async () => {
   wrap.style.display = "block";
   bar.style.width = "0%";
   const tick = setInterval(() => {
+    // Indicador estimado enquanto a requisição não retorna percentual real.
     const atual = parseFloat(bar.style.width);
     if (atual < 85) bar.style.width = (atual + 3) + "%";
   }, 200);
 
   try {
+    // FormData transmite arquivo e identificadores sem converter o PDF em JSON.
     const fd = new FormData();
     fd.append("arquivo", arquivoPdf);
     fd.append("obra_id", $("pdf-obra").value);
@@ -635,6 +663,7 @@ $("btn-upload").addEventListener("click", async () => {
 
     if (!r.ok) throw new Error(d.erro || "Erro no upload");
 
+    // Limpa os controles somente depois que o servidor confirma o sucesso.
     mostrarMsgUpload("✓ PDF enviado e URL salva no banco!", "ok");
 
     arquivoPdf = null;
@@ -652,6 +681,7 @@ $("btn-upload").addEventListener("click", async () => {
   }
 });
 
+// Carrega os dados iniciais em paralelo e prepara tabelas e selects.
 async function carregarTodos() {
   [obras, capitulos] = await Promise.all([
     api("/api/minhas_obras"),
@@ -664,6 +694,7 @@ async function carregarTodos() {
     $("btn-ir-capitulos").style.display = "block";
   }
 }
+// Inicializa o painel assim que o script chega ao final do documento.
 carregarTodos();
 </script>
 </body>

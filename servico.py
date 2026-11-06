@@ -3,16 +3,19 @@ Regras de negócio e acesso ao banco (sessão + consultas).
 Nas rotas só chamamos estas funções e devolvemos JSON.
 """
 
+# Construtor de consultas SQLAlchemy usado nas listagens e validações.
 from sqlalchemy import select
 
+# Sessões de banco, modelos persistidos e função de hash das senhas.
 from database import SessionLocal
 from models import Usuario, Obra, Capitulo, PdfUrl
 from werkzeug.security import generate_password_hash
 
 
-# ── Listagens ─────────────────────────────────────────────────────────────────
+# ── Consultas de leitura ──────────────────────────────────────────────────────
 
 def listar_obras():
+  """Retorna as obras ordenadas pelo título."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(Obra).order_by(Obra.titulo_obra)).all()
@@ -22,6 +25,7 @@ def listar_obras():
 
 
 def listar_capitulos():
+  """Retorna capítulos ordenados pelo número."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(Capitulo).order_by(Capitulo.numero_capitulo)).all()
@@ -31,6 +35,7 @@ def listar_capitulos():
 
 
 def listar_usuarios():
+  """Retorna os usuários ordenados pelo nome."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(Usuario).order_by(Usuario.nome)).all()
@@ -40,6 +45,7 @@ def listar_usuarios():
 
 
 def listar_pdf_urls():
+  """Retorna todos os registros que relacionam obras/capítulos a PDFs."""
   session = SessionLocal()
   try:
     linhas = session.scalars(select(PdfUrl).order_by(PdfUrl.id)).all()
@@ -55,6 +61,7 @@ def buscar_usuario_por_email(email: str):
   """
   session = SessionLocal()
   try:
+    # Busca um único usuário; a senha só é usada internamente pelo login.
     usuario = session.scalar(
       select(Usuario).where(Usuario.email == email)
     )
@@ -70,32 +77,36 @@ def buscar_usuario_por_email(email: str):
     session.close()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Normalização e validação de campos ────────────────────────────────────────
 
 
 def _texto_obrigatorio(valor, campo):
+  """Valida e normaliza um valor textual obrigatório."""
   if valor is None or str(valor).strip() == "":
     raise ValueError(f"O campo '{campo}' é obrigatório.")
   return str(valor).strip()
 
 
 def _texto_opcional(valor):
+  """Normaliza texto opcional e converte valores vazios para None."""
   if valor is None:
     return None
   texto = str(valor).strip()
   return texto or None
 
 
-# ── Cadastros ─────────────────────────────────────────────────────────────────
+# ── Operações de cadastro ─────────────────────────────────────────────────────
 
 
 def cadastrar_usuario(dados):
+  """Valida os campos e persiste um usuário, armazenando a senha como hash."""
   nome  = _texto_obrigatorio(dados.get("nome"), "nome")
   email = _texto_opcional(dados.get("email"))
   senha = _texto_opcional(dados.get("senha"))
 
   session = SessionLocal()
   try:
+    # Senha vazia é permitida pelo modelo; quando informada, nunca é salva em texto puro.
     usuario = Usuario(nome=nome, email=email, senha=(generate_password_hash(senha) if senha else None))
     session.add(usuario)
     session.commit()
@@ -109,6 +120,7 @@ def cadastrar_usuario(dados):
 
 
 def cadastrar_obra(dados):
+  """Valida autor e metadados antes de criar uma obra."""
   titulo_obra = _texto_obrigatorio(dados.get("titulo_obra"), "titulo_obra")
   autor_id    = _texto_obrigatorio(dados.get("autor_id"), "autor_id")
   categoria   = _texto_opcional(dados.get("categoria")) or None
@@ -117,6 +129,7 @@ def cadastrar_obra(dados):
 
   session = SessionLocal()
   try:
+    # Impede referenciar um usuário inexistente como autor.
     autor = session.get(Usuario, int(autor_id))
     if autor is None:
       raise ValueError(f"Autor {autor_id} não encontrado.")
@@ -140,10 +153,11 @@ def cadastrar_obra(dados):
 
 
 def cadastrar_capitulo(dados):
+  """Cria um capítulo, valida a propriedade e calcula seu número sequencial."""
   titulo_capitulo = _texto_obrigatorio(dados.get("titulo_capitulo"), "titulo_capitulo")
   obra_id         = _texto_obrigatorio(dados.get("obra_id"), "obra_id")
 
-  # Opcional: validar se o usuário que está criando o capítulo é dono da obra
+  # O ID do usuário é opcional para chamadas internas, mas validado quando informado.
   usuario_id = dados.get("usuario_id")
 
   session = SessionLocal()
@@ -160,7 +174,7 @@ def cadastrar_capitulo(dados):
       if obra.autor_id != uid:
         raise ValueError("Você não tem permissão para adicionar capítulos a esta obra.")
 
-    # Auto incremento do número do capítulo
+    # O número é calculado com base no último capítulo já cadastrado para a obra.
     ultimo_numero = session.scalar(
       select(Capitulo.numero_capitulo)
       .where(Capitulo.obra_id == obra.id)
@@ -196,11 +210,12 @@ def cadastrar_pdf_url(dados):
 
   session = SessionLocal()
   try:
+    # Confirma que a URL não ficará associada a uma obra inexistente.
     obra = session.get(Obra, obra_id)
     if obra is None:
       raise ValueError(f"Obra {obra_id} não encontrada.")
 
-    # Validar capitulo_id se fornecido
+    # Se o PDF for de um capítulo, valida também que ele pertence à obra indicada.
     if capitulo_id:
       capitulo_id = int(capitulo_id)
       capitulo = session.get(Capitulo, capitulo_id)

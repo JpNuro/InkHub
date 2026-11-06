@@ -1,5 +1,7 @@
+/* Faz bordas e espaçamentos entrarem no cálculo total do tamanho dos elementos. */
 * { box-sizing: border-box; }
 
+/* Aparência geral da interface administrativa. */
 body {
   margin: 0;
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -7,6 +9,7 @@ body {
   color: #1f2937;
 }
 
+/* Faixa superior de identidade da tela. */
 .topo {
   background: #1d4ed8;
   color: #fff;
@@ -15,18 +18,21 @@ body {
 
 .topo h1 { margin: 0; font-size: 1.6rem; }
 
+/* Texto auxiliar abaixo do título do cabeçalho. */
 .subtitulo {
   margin: 4px 0 0;
   opacity: 0.85;
   font-size: 0.95rem;
 }
 
+/* Realce visual para trechos técnicos apresentados no subtítulo. */
 .subtitulo code {
   background: rgba(255, 255, 255, 0.18);
   padding: 1px 6px;
   border-radius: 4px;
 }
 
+/* Navegação por abas da interface. */
 .abas {
   display: flex;
   gap: 8px;
@@ -54,12 +60,14 @@ body {
   font-weight: 600;
 }
 
+/* Espaçamento e grade dos painéis do conteúdo. */
 .conteudo {
   padding: 24px 32px;
   display: grid;
   gap: 20px;
 }
 
+/* Superfície dos cartões de formulário e tabela. */
 #painel-formulario,
 #painel-tabela {
   background: #fff;
@@ -68,12 +76,14 @@ body {
   padding: 20px 24px;
 }
 
+/* Títulos internos dos painéis. */
 #painel-formulario h2,
 .cabecalho-painel h2 {
   margin: 0 0 12px;
   font-size: 1.1rem;
 }
 
+/* Organiza os campos do formulário em colunas responsivas. */
 .grade-campos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -81,6 +91,7 @@ body {
   margin-bottom: 12px;
 }
 
+/* Rótulos e controles dos campos de entrada. */
 .campo { display: flex; flex-direction: column; gap: 4px; }
 
 .campo label {
@@ -105,6 +116,7 @@ body {
   box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
 }
 
+/* Ações e estados do formulário. */
 .acoes-formulario {
   display: flex;
   align-items: center;
@@ -132,6 +144,7 @@ body {
 .mensagem.sucesso { color: #166534; }
 .mensagem.erro { color: #b91c1c; }
 
+/* Cabeçalho e botão de atualização da tabela. */
 .cabecalho-painel {
   display: flex;
   align-items: center;
@@ -154,6 +167,7 @@ body {
   color: #fff;
 }
 
+/* Indicador de carregamento e tabela de resultados. */
 .status {
   margin-bottom: 12px;
   font-size: 0.9rem;

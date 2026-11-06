@@ -1,8 +1,12 @@
 """
-Script didático: DDL (create/drop tables) + DML (inserts) com sessão explícita.
-Execute na raiz do projeto: python setup_database.py
+Rascunhos didáticos de criação e população de banco com SQLAlchemy.
+
+Os exemplos abaixo estão comentados e não são executados. Atenção: os exemplos
+antigos chamam drop_all, que apagaria as tabelas se fossem reativados.
 """
 
+# Imports dos exemplos SQLAlchemy abaixo, mantidos comentados porque o script
+# atualmente não executa nenhuma alteração no banco.
 # from sqlalchemy import select
 
 # from database import Base, SessionLocal, engine
@@ -96,7 +100,7 @@ Execute na raiz do projeto: python setup_database.py
 
 ####
 ##      
-## Minha parte ⬇️
+## Exemplo antigo de dados para o InkHub (permanece desativado).
 ##
 ####
 

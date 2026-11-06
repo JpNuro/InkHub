@@ -1,7 +1,7 @@
 /* Ajustes compartilhados para telas pequenas do catálogo, leitor e painel. */
 
 @media (max-width: 768px) {
-  /* Catalogo e leitor */
+  /* Catálogo e leitor: troca o layout em colunas por uma pilha vertical. */
   body:has(.container) {
     overflow-x: hidden;
   }
@@ -104,7 +104,7 @@
     border-radius: 8px;
   }
 
-  /* Painel administrativo */
+  /* Painel administrativo: mantém formulários e tabelas legíveis em coluna. */
   body:has(.secao-conteudo) {
     overflow-x: hidden;
   }
@@ -192,7 +192,7 @@
     padding: 1.5rem 1rem;
   }
 
-  /* Login */
+  /* Login: adapta o cartão e os controles à largura disponível. */
   body:has(.card) {
     padding: 1rem;
   }
@@ -211,6 +211,7 @@
 }
 
 @media (max-width: 420px) {
+  /* Reduz controles e empilha o cabeçalho da tabela em celulares estreitos. */
   .container .pdf-controles button {
     font-size: .74rem;
   }

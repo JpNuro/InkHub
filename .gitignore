@@ -1,9 +1,13 @@
+# Ambientes virtuais locais do Python.
 .venv/
 venv/
+# Cache de bytecode gerado pelo interpretador.
 __pycache__/
 *.py[cod]
 *$py.class
 .Python
 *.so
+# Arquivos locais de configuração e segredos não devem ser versionados.
 .env
+# Banco de dados SQLite local; os dados são específicos de cada instalação.
 instance/*.db

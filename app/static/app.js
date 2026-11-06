@@ -1,3 +1,4 @@
+// Define quais propriedades de cada resposta aparecem nas tabelas do painel.
 const COLUNAS = {
   usuarios: [
     { chave: "id", titulo: "ID" },
@@ -20,12 +21,14 @@ const COLUNAS = {
   ],
 };
 
+// Textos dos títulos usados ao alternar entre as áreas administrativas.
 const TITULOS = {
   usuarios: { lista: "Usuários", form: "Novo usuário" },
   obras: { lista: "Obras", form: "Nova obra" },
   capitulos: { lista: "Capítulos", form: "Novo capítulo" },
 };
 
+// Campos que serão montados dinamicamente para cada tipo de cadastro.
 const CAMPOS = {
   usuarios: [
     { nome: "nome", rotulo: "Nome", obrigatorio: true },
@@ -48,6 +51,7 @@ const CAMPOS = {
   ],
 };
 
+// Referências aos elementos do painel, reutilizadas pelas funções abaixo.
 const elementoStatus = document.getElementById("status");
 const elementoTituloLista = document.getElementById("titulo-lista");
 const elementoTituloFormulario = document.getElementById("titulo-formulario");
@@ -61,6 +65,7 @@ const abas = document.querySelectorAll(".aba");
 
 let tipoAtual = "usuarios";
 
+// Consulta a API para um recurso e transforma respostas HTTP inválidas em erro.
 async function buscar(tipo) {
   const resposta = await fetch(`/api/${tipo}`);
   if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
@@ -68,6 +73,7 @@ async function buscar(tipo) {
 }
 
 async function carregar(tipo) {
+  // Atualiza o contexto da tela antes de solicitar os dados ao servidor.
   tipoAtual = tipo;
   elementoTituloLista.textContent = TITULOS[tipo].lista;
   elementoTituloFormulario.textContent = TITULOS[tipo].form;
@@ -81,6 +87,7 @@ async function carregar(tipo) {
   elementoStatus.textContent = "Carregando...";
 
   try {
+    // Busca os registros e atualiza tabela e indicador de carregamento.
     const dados = await buscar(tipo);
     renderizarLinhas(tipo, dados);
     elementoStatus.textContent = `${dados.length} registro(s) carregado(s).`;
@@ -91,6 +98,7 @@ async function carregar(tipo) {
 }
 
 function renderizarCabecalho(tipo) {
+  // Cria os cabeçalhos conforme as colunas configuradas para o recurso.
   elementoCabecalho.innerHTML = "";
   for (const coluna of COLUNAS[tipo]) {
     const th = document.createElement("th");
@@ -100,6 +108,7 @@ function renderizarCabecalho(tipo) {
 }
 
 function renderizarLinhas(tipo, dados) {
+  // Informa quando a consulta não retornou registros para exibir.
   if (!dados.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
@@ -111,6 +120,7 @@ function renderizarLinhas(tipo, dados) {
     return;
   }
 
+  // Adiciona uma linha por registro usando textContent para exibir valores como texto.
   for (const item of dados) {
     const tr = document.createElement("tr");
     for (const coluna of COLUNAS[tipo]) {
@@ -124,6 +134,7 @@ function renderizarLinhas(tipo, dados) {
 }
 
 async function renderizarFormulario(tipo) {
+  // Reconstrói os controles do formulário de acordo com o cadastro escolhido.
   elementoCampos.innerHTML = "";
   for (const campo of CAMPOS[tipo]) {
     const wrapper = document.createElement("div");
@@ -135,6 +146,7 @@ async function renderizarFormulario(tipo) {
     wrapper.appendChild(label);
 
     if (campo.tipo === "select") {
+      // Preenche listas de seleção consultando a origem indicada na configuração.
       const select = document.createElement("select");
       select.id = `campo-${campo.nome}`;
       select.name = campo.nome;
@@ -162,6 +174,7 @@ async function renderizarFormulario(tipo) {
 
       wrapper.appendChild(select);
     } else {
+      // Os demais campos são inputs HTML com tipo e validação configuráveis.
       const input = document.createElement("input");
       input.type = campo.tipo || "text";
       input.id = `campo-${campo.nome}`;
@@ -175,21 +188,25 @@ async function renderizarFormulario(tipo) {
 }
 
 function rotuloItem(origem, item) {
+  // Define o texto legível de cada opção dos selects de relacionamento.
   if (origem === "usuarios") return `${item.nome} (id ${item.id})`;
   if (origem === "obras") return `${item.titulo} (id ${item.id})`;
   return `${item.id}`;
 }
 
 function limparMensagem() {
+  // Limpa mensagem anterior e remove as classes de estado visual.
   mensagemFormulario.textContent = "";
   mensagemFormulario.classList.remove("sucesso", "erro");
 }
 
 async function enviarFormulario(evento) {
+  // Intercepta o submit para enviar JSON à API sem recarregar a página.
   evento.preventDefault();
   limparMensagem();
 
   const dados = {};
+  // Lê e valida os campos declarados para o tipo de cadastro atual.
   for (const campo of CAMPOS[tipoAtual]) {
     const elemento = formulario.elements[campo.nome];
     const valor = elemento.value.trim();
@@ -205,6 +222,7 @@ async function enviarFormulario(evento) {
   const botao = formulario.querySelector("button[type=submit]");
   botao.disabled = true;
   try {
+    // Envia os valores e interpreta erros retornados pelo backend.
     const resposta = await fetch(`/api/${tipoAtual}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -229,6 +247,7 @@ async function enviarFormulario(evento) {
 }
 
 abas.forEach((aba) => {
+  // Trocar de aba atualiza o destaque e carrega os registros correspondentes.
   aba.addEventListener("click", () => {
     abas.forEach((a) => a.classList.remove("ativa"));
     aba.classList.add("ativa");
@@ -236,7 +255,9 @@ abas.forEach((aba) => {
   });
 });
 
+// Botões e formulário compartilham as funções de recarregar e cadastrar.
 botaoRecarregar.addEventListener("click", () => carregar(tipoAtual));
 formulario.addEventListener("submit", enviarFormulario);
 
+// Abre o painel com a lista padrão de usuários.
 carregar("usuarios");
