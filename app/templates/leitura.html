@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkHub</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     /* Normaliza o tamanho dos elementos e remove as margens padrão do navegador. */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -266,24 +267,22 @@
     .pdf-controles {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: .45rem;
       flex-wrap: wrap;
+      width: 100%;
     }
-    .pdf-controles button {
-      background: #2a2a3a;
-      border: none;
-      color: #e2e2e2;
-      padding: .38rem .75rem;
+    .pdf-controles .btn {
+      min-width: 2.4rem;
+      text-align: center;
       border-radius: 999px;
-      cursor: pointer;
+      padding: .38rem .75rem;
       font-size: .8rem;
-      transition: background .15s;
+      line-height: 1.2;
     }
-    .pdf-controles button:hover { background: #4c1d95; }
-    .pdf-controles button:disabled {
-      opacity: .45;
+    .pdf-controles .btn:disabled {
+      opacity: .55;
       cursor: not-allowed;
-      background: #2a2a3a;
     }
     /* Reserva a área flexível para o documento e mantém o iframe dentro dela. */
     .pdf-reader-shell {
@@ -678,11 +677,10 @@
             <span id="pdf-meta">Selecione um capítulo para ler</span>
           </div>
           <div class="pdf-controles">
-            <button type="button" class="pdf-voltar" id="voltar-obras">← Voltar às obras</button>
-            <button type="button" id="voltar-pagina" disabled>← Voltar</button>
+            <button type="button" class="btn btn-danger btn-sm pdf-voltar" id="voltar-obras" aria-label="Voltar às obras">←</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="voltar-pagina" aria-label="Voltar página" disabled>←</button>
             <span id="pdf-pagina-info">Página 1</span>
-            <button type="button" id="avancar-pagina">Avançar →</button>
-            <button type="button" id="pdf-link-externo">Abrir PDF</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="avancar-pagina" aria-label="Avançar página">→</button>
           </div>
         </div>
         <div class="pdf-reader-shell" id="pdf-reader-shell">
@@ -697,6 +695,7 @@
   </main>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
 /* Atalhos para selecionar elementos pelo ID ou por um seletor CSS. */
 const $  = id => document.getElementById(id);
@@ -707,24 +706,66 @@ let obraAtual = null;
 let todosObraCards = [];
 let currentPdfUrl = null;
 let paginaAtual = 1;
+let totalPaginas = null;
+
+function atualizarBotaoAvancar() {
+  const temProximaPagina = !Number.isFinite(totalPaginas) || paginaAtual < totalPaginas;
+  $("avancar-pagina").disabled = !currentPdfUrl || !temProximaPagina;
+}
+
+function limitarTexto(texto, maximo = 37) {
+  const valor = String(texto ?? '').trim();
+  if (!valor) return 'Autor desconhecido';
+  if (valor.length <= maximo) return valor;
+  const limite = Math.max(1, maximo - 1);
+  return `${valor.slice(0, limite).trimEnd()}…`;
+}
 
 function atualizarControlesPdf() {
   // Atualiza o indicador da página e desativa "voltar" na primeira página.
   const totalInfo = paginaAtual > 1 ? `Página ${paginaAtual}` : "Página 1";
   $("pdf-pagina-info").textContent = totalInfo;
   $("voltar-pagina").disabled = paginaAtual <= 1;
+  atualizarBotaoAvancar();
+}
+
+function carregarTotalPaginasPdf(url) {
+  if (!url || typeof pdfjsLib === "undefined") {
+    totalPaginas = null;
+    atualizarControlesPdf();
+    return;
+  }
+
+  totalPaginas = null;
+
+  fetch(url, { mode: "cors" })
+    .then(resposta => {
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      return resposta.arrayBuffer();
+    })
+    .then(buffer => pdfjsLib.getDocument({ data: buffer }).promise)
+    .then(pdf => {
+      totalPaginas = pdf.numPages;
+      atualizarControlesPdf();
+    })
+    .catch(() => {
+      totalPaginas = null;
+      atualizarControlesPdf();
+    });
 }
 
 function abrirPdfNaTela(url) {
   // Monta a URL do visualizador do Google e troca a página para o modo de leitura.
   currentPdfUrl = url;
   paginaAtual = 1;
+  totalPaginas = null;
   const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true#page=1`;
   $("pdf-sem-arquivo").classList.remove("visivel");
   $("pdf-reader-shell").style.display = "block";
   $("pdf-viewer").classList.add("active", "fullscreen");
   document.body.classList.add("leitor-aberto");
   $("pdf-frame").src = viewerUrl;
+  carregarTotalPaginasPdf(url);
   atualizarControlesPdf();
 }
 
@@ -754,8 +795,10 @@ async function carregarObras() {
       // O card funciona com mouse e teclado para continuar acessível.
       const card = document.createElement("div");
       card.className = "obra-card";
-      card.dataset.id    = o.id;
+      card.dataset.id = o.id;
       card.dataset.titulo = (o.titulo || "").toLocaleLowerCase("pt-BR");
+      card.dataset.autor = (o.autor || "").toLocaleLowerCase("pt-BR");
+      card.dataset.categoria = (o.categoria || "").toLocaleLowerCase("pt-BR");
       card.tabIndex = 0;
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", `Abrir ${o.titulo}`);
@@ -780,7 +823,7 @@ async function carregarObras() {
       titulo.textContent = o.titulo || "Sem título";
       const autor = document.createElement("div");
       autor.className = "autor";
-      autor.textContent = o.autor || "Autor desconhecido";
+      autor.textContent = limitarTexto(o.autor || "Autor desconhecido", 37);
       info.append(titulo, autor);
       if (o.categoria) {
         const categoria = document.createElement("span");
@@ -808,12 +851,13 @@ async function carregarObras() {
   }
 }
 
-/* Filtra títulos sem diferenciar maiúsculas de minúsculas e atualiza o contador. */
+/* Filtra por título, categoria e autor sem diferenciar maiúsculas de minúsculas. */
 $("busca").addEventListener("input", e => {
-  const q = e.target.value.toLocaleLowerCase("pt-BR");
+  const q = e.target.value.trim().toLocaleLowerCase("pt-BR");
   let encontrados = 0;
   todosObraCards.forEach(c => {
-    const corresponde = c.dataset.titulo.includes(q);
+    const textoBusca = `${c.dataset.titulo || ""} ${c.dataset.autor || ""} ${c.dataset.categoria || ""}`;
+    const corresponde = !q || textoBusca.includes(q);
     c.style.display = corresponde ? "" : "none";
     if (corresponde) encontrados += 1;
   });
@@ -832,8 +876,9 @@ async function selecionarObra(card, obra) {
   $("obra-detalhe").style.display = "flex";
 
   $("detalhe-titulo").textContent = obra.titulo;
-  $("detalhe-meta").textContent   = [obra.autor, obra.categoria, obra.ano]
-    .filter(Boolean).join(" · ");
+  $("detalhe-meta").textContent = [limitarTexto(obra.autor || "Autor desconhecido", 37), obra.categoria, obra.ano]
+    .filter(Boolean)
+    .join(" · ");
 
   ativarAba("capitulos");
   $("pdf-nome").textContent = obra.titulo;
@@ -961,6 +1006,7 @@ function voltarParaObras() {
   $("pdf-sem-arquivo").classList.remove("visivel");
   currentPdfUrl = null;
   paginaAtual = 1;
+  totalPaginas = null;
   atualizarControlesPdf();
   $("pdf-nome").textContent = "—";
   $("pdf-meta").textContent = "Selecione um capítulo para ler";
@@ -977,13 +1023,6 @@ document.addEventListener("keydown", evento => {
   }
 });
 
-$("pdf-link-externo").addEventListener("click", () => {
-  // Abre o arquivo original em outra aba, se houver um PDF carregado.
-  if (currentPdfUrl) {
-    window.open(currentPdfUrl, "_blank");
-  }
-});
-
 $("voltar-pagina").addEventListener("click", () => {
   // Recarrega o visualizador apontando para a página anterior.
   if (currentPdfUrl && paginaAtual > 1) {
@@ -994,12 +1033,17 @@ $("voltar-pagina").addEventListener("click", () => {
 });
 
 $("avancar-pagina").addEventListener("click", () => {
-  // O total de páginas é desconhecido; o leitor permite avançar enquanto houver PDF.
-  if (currentPdfUrl) {
-    paginaAtual += 1;
-    $("pdf-frame").src = `https://docs.google.com/viewer?url=${encodeURIComponent(currentPdfUrl)}&embedded=true#page=${paginaAtual}`;
+  if (!currentPdfUrl) return;
+
+  const temProximaPagina = !Number.isFinite(totalPaginas) || paginaAtual < totalPaginas;
+  if (!temProximaPagina) {
     atualizarControlesPdf();
+    return;
   }
+
+  paginaAtual += 1;
+  $("pdf-frame").src = `https://docs.google.com/viewer?url=${encodeURIComponent(currentPdfUrl)}&embedded=true#page=${paginaAtual}`;
+  atualizarControlesPdf();
 });
 
 // Inicia o catálogo assim que o navegador executa o script no final da página.
